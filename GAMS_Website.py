@@ -17,7 +17,7 @@ if 'demographic_data' not in st.session_state:
 
 
 # Load predefined choice sets
-design = pd.read_csv("/Users/lauraknappik/sciebo - Knappik, Laura (7ZX85D@rwth-aachen.de)@rwth-aachen.sciebo.de/Dokumente/Projekte/Optimal_board_and_alight/Choice_Experiment/DCE_Python/CSV/Boarding_import.csv")
+design = pd.read_csv("Boarding_import.csv")
 
 # Counter file to track participants
 counter_file = "counter.txt"
@@ -35,14 +35,14 @@ else:
     ticket_price = 2.8
 
 # Image paths
-background_path = "/Users/lauraknappik/sciebo - Knappik, Laura (7ZX85D@rwth-aachen.de)@rwth-aachen.sciebo.de/Dokumente/Projekte/Optimal_board_and_alight/Choice_Experiment/DCE_Python/App_test/Background.png"
-door_marker_path = "/Users/lauraknappik/sciebo - Knappik, Laura (7ZX85D@rwth-aachen.de)@rwth-aachen.sciebo.de/Dokumente/Projekte/Optimal_board_and_alight/Choice_Experiment/DCE_Python/App_test/door_marker.png"
+background_path = "Background.png"
+#door_marker_path = "/Users/lauraknappik/sciebo - Knappik, Laura (7ZX85D@rwth-aachen.de)@rwth-aachen.sciebo.de/Dokumente/Projekte/Optimal_board_and_alight/Choice_Experiment/DCE_Python/App_test/door_marker.png"
 
 # --- HELPER FUNCTION ---
 
 def compose_image(D2D_value):
     base = Image.open(background_path).convert("RGBA")
-    door_marker = Image.open(door_marker_path).convert("RGBA")
+    #door_marker = Image.open(door_marker_path).convert("RGBA")
     
     if D2D_value == 0:
         door_size_x, door_size_y, door_x, door_y = 600, 800, 1900, 700
@@ -91,7 +91,7 @@ In each question, you will be shown **two alternative boarding doors**, includin
 """)
 
     st.image(
-        "/Users/lauraknappik/sciebo - Knappik, Laura (7ZX85D@rwth-aachen.de)@rwth-aachen.sciebo.de/Dokumente/Projekte/Optimal_board_and_alight/Choice_Experiment/DCE_Python/CSV/screenshot_question.png",
+        "screenshot_question.png",
         caption="Example: The door is marked with a blue rectangle",
         use_container_width=True
     )
@@ -256,7 +256,7 @@ elif st.session_state.page == 'survey':
                 ])
 
                 # Save responses
-                response_path = "/Users/lauraknappik/sciebo - Knappik, Laura (7ZX85D@rwth-aachen.de)@rwth-aachen.sciebo.de/Dokumente/Projekte/Optimal_board_and_alight/Choice_Experiment/DCE_Python/responses.csv"
+                response_path = "responses.csv"
                 if not os.path.exists(response_path):
                     df_responses.to_csv(response_path, index=False)
                 else:
@@ -318,7 +318,7 @@ elif st.session_state.page == 'demographics':
 
         }])
 
-        demographic_path = "/Users/lauraknappik/sciebo - Knappik, Laura (7ZX85D@rwth-aachen.de)@rwth-aachen.sciebo.de/Dokumente/Projekte/Optimal_board_and_alight/Choice_Experiment/DCE_Python/demographics.csv"
+        demographic_path = "demographics.csv"
         if not os.path.exists(demographic_path):
             demographic_response.to_csv(demographic_path, index=False)
         else:
