@@ -1,0 +1,7 @@
+streamlit
+pandas
+Pillow
+biogeme
+choicedesign
+gspread
+oauth2client
