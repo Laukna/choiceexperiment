@@ -73,45 +73,70 @@ def compose_image(D2D_value):
 if st.session_state.page == 'start':
     st.title("Welcome to the Train Door Choice Experiment")
 
-    st.write(f"""
-    Dear Participant,
+    st.markdown(f"""
+Dear Participant,
 
-    Thank you for your interest in this study!
+Thank you for your interest in this study!
 
-    This survey is part of a research project aimed at understanding how travelers make decisions when boarding trains. Your responses will contribute to improving passenger experiences and optimizing boarding processes in public transportation.
+This survey is part of a research project aimed at understanding how travelers make decisions when boarding underground trains (**U-Bahn**).
 
-    **What to Expect:**
+---
 
-    You will be presented with a series of scenarios, each showing two different train doors highlighted by a blue rectangle to indicate their location.  
-    Each door offers a specific discount, which will be deducted from the standard ticket price of **{ticket_price} Euros**.
-    
-    Each door option also shows the **time until train arrival**.  
-    In some cases, the time value is followed by **"(next)"** — for example, **"10 (next)"**.  
-    This indicates that you would wait for the **subsequent train**, not the one currently arriving.  
-    Choosing this option will still qualify you for the corresponding discount.
+**Please read the following information carefully before starting the survey.**
 
-    Your task is to choose the door you would prefer to use in each scenario.  
-    There are no right or wrong answers; we are interested in your personal preferences.
+**Set-up:**
 
-    **Data Protection and Confidentiality:**
+Imagine you are standing on an U-Bahn platform and would like to board the train.  
+In each question, you will be shown **two alternative boarding doors**, including the following information for each option:
+""")
 
-    - Participation is entirely voluntary, and you may withdraw at any time without any consequences.
-    - All data collected will be anonymized and used solely for academic research purposes.
-    - No personally identifiable information will be collected.
-    - Data will be stored securely and in compliance with the General Data Protection Regulation (GDPR/DSGVO).
+    st.image(
+        "/Users/lauraknappik/sciebo - Knappik, Laura (7ZX85D@rwth-aachen.de)@rwth-aachen.sciebo.de/Dokumente/Projekte/Optimal_board_and_alight/Choice_Experiment/DCE_Python/CSV/screenshot_question.png",
+        caption="Example: The door is marked with a blue rectangle",
+        use_container_width=True
+    )
 
-    **Contact Information:**
+    st.markdown(f"""
 
-    If you have any questions about the study, please contact Laura Knappik at knappik@analytics.rwth-aachen.de.
+- **Walking distance to door**: This indicates how far the door is from your current position on the platform.  
+  The corresponding door is highlighted with a **blue rectangle** in the image.
 
-    **Demographic Information:**
+- **Offered discount**: This is the amount subtracted from the regular trip price of **{ticket_price} Euros** if you choose this door to board.  
+  It represents an incentive for using a specific door.
 
-    At the end of the survey, we will ask a few optional questions about your background (e.g., age group, gender, travel habits) to help contextualize the results. Your responses will remain anonymous.
+- **Time until train arrival**: This shows how long it will take until the train at this door arrives.  
+  If the time is shown with a "next", for example, **"10 (next)"**, this means the door is part of the **next trip** — i.e., you would ignore the upcoming train and wait for the subsequent train.
 
-    ---
+---
 
-    By proceeding with the survey, you confirm that you have read and understood the information provided above and agree to participate under these conditions.
-    """)
+**What you will do:**
+
+You will be presented with a series of these boarding choices.  
+In each case, your task is to **select the door you would prefer to use**.  
+There are no right or wrong answers — we are only interested in your personal preferences.
+
+---
+
+**Data Protection and Confidentiality:**
+
+- Your participation is entirely voluntary, and you may withdraw at any time without consequences.
+- All data will be collected anonymously and used solely for academic research purposes.
+- No personal information will be recorded.
+- Data storage and processing comply with the General Data Protection Regulation (**GDPR/DSGVO**).
+
+**Contact Information:**
+
+If you have any questions about the study, please contact **Laura Knappik** at **knappik@analytics.rwth-aachen.de**.
+
+**Demographic Information:**
+
+At the end of the survey, we will ask a few optional questions about your background (e.g., age group, gender, travel frequency). These help us better interpret the results and remain completely anonymous.
+
+---
+
+By continuing, you confirm that you have read and understood the information provided above and agree to participate under these conditions.
+""")
+
 
 
     if st.button("Start Survey"):
@@ -129,7 +154,7 @@ elif st.session_state.page == 'survey':
 
     Remember: The regular ticket price for this trip is **{ticket_price} Euros**.  
     Each door option may offer a discount that will reduce this price.
-    
+
     Remember: **Next** indicates waiting for the next trip, not taking the current one. 
     """)
 
@@ -146,9 +171,9 @@ elif st.session_state.page == 'survey':
     # Create images
     image_A = compose_image(question['alt1_D2D'])
     image_B = compose_image(question['alt2_D2D'])
-    image_C = compose_image(question['alt3_D2D'])
 
-    col1, col2, col3 = st.columns(3)
+
+    col1, col2 = st.columns(2)
 
     with col1:
         st.subheader("Door A")
@@ -178,26 +203,15 @@ elif st.session_state.page == 'survey':
 
         st.markdown(f"**Time until train arrival**: {arrival_time_2}")
     
-    with col3:
-        st.subheader("Door C")
-        st.image(image_C, caption="Option C", use_container_width=True)
-        st.markdown(f"**Walking distance to door**: {question['alt3_D2D']} m")
-        discount_amount_3 = round(ticket_price * question['alt3_D'] / 100, 2)
-        st.markdown(f"**Offered discount**: {question['alt3_D']} % (−{discount_amount_2} €)")
-        if question['alt3_TS'] == 1:
-            arrival_time_3 = f"{question['alt3_T2DR'] + question['alt3_T2DS']} min (next)"
-        else:
-            arrival_time_3 = f"{question['alt3_T2DR']} min"
 
-        st.markdown(f"**Time until train arrival**: {arrival_time_3}")
 
 
     # Get participant's choice
     choice = st.radio(
         "Which option do you choose?",
-        ("Door A", "Door B", "No Boarding"),
+        ("Door A", "Door B", "None of both"),
         key=f"choice_{idx}",
-        index=("Door A", "Door B", "Door C", "No Boarding").index(
+        index=("Door A", "Door B", "None of both").index(
             st.session_state.responses.get(idx, "Door A")
         ) if idx in st.session_state.responses else 0
     )
@@ -235,12 +249,8 @@ elif st.session_state.page == 'survey':
                         'alt2_D2D': questions.iloc[i]['alt2_D2D'],
                         'alt2_TS': questions.iloc[i]['alt2_TS'],
                         'alt2_T2DR': questions.iloc[i]['alt2_T2DR'],
-                        'alt2_T2DS': questions.iloc[i]['alt2_T2DS'],
-                        'alt3_D': questions.iloc[i]['alt3_D'],
-                        'alt3_D2D': questions.iloc[i]['alt3_D2D'],
-                        'alt3_TS': questions.iloc[i]['alt3_TS'],
-                        'alt3_T2DR': questions.iloc[i]['alt3_T2DR'],
-                        'alt3_T2DS': questions.iloc[i]['alt3_T2DS'],
+                        'alt2_T2DS': questions.iloc[i]['alt2_T2DS']
+                        
                     }
                     for i in range(total_questions)
                 ])
@@ -279,6 +289,11 @@ elif st.session_state.page == 'demographics':
         ["Prefer not to say", "None", "Daily", "Weekly", "Monthly", "Yearly"]
     )
 
+    travel_freq_1 = st.selectbox(
+        "How often have you approximately traveled by ***U-Bahn*** in the last 12 months?",
+        ["Prefer not to say", "None", "Daily", "Weekly", "Monthly", "Yearly"]
+    )
+
     mobility = st.select_slider(
         "How would you assess your mobility?",
         options=[
@@ -298,7 +313,9 @@ elif st.session_state.page == 'demographics':
             'age': age,
             'gender': gender,
             'travel_frequency': travel_freq,
+            'ubahn_frequency' : travel_freq_1,
             'mobility': mobility
+
         }])
 
         demographic_path = "/Users/lauraknappik/sciebo - Knappik, Laura (7ZX85D@rwth-aachen.de)@rwth-aachen.sciebo.de/Dokumente/Projekte/Optimal_board_and_alight/Choice_Experiment/DCE_Python/demographics.csv"
