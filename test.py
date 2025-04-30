@@ -339,7 +339,7 @@ elif st.session_state.page == 'demographics':
 
         #increase counter
         sheet_meta = get_gsheet().worksheet("Meta")
-        sheet_meta.update("A1", str(counter + 1))
+        sheet_meta.update("A1", [[str(counter + 1)]])
 
 
         st.success("Thank you for participating in our study!")
