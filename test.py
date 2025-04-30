@@ -179,6 +179,9 @@ elif st.session_state.page == 'survey':
     total_questions = len(questions)
 
     idx = st.session_state.current_idx
+    if f"temp_choice_{idx}" not in st.session_state:
+        st.session_state[f"temp_choice_{idx}"] = st.session_state.responses.get(idx, "Door A")
+
     question = questions.iloc[idx]
 
     st.markdown(f"### Choice Set {idx+1} of {total_questions}")
@@ -222,17 +225,17 @@ elif st.session_state.page == 'survey':
 
 
     # Get participant's choice
-    choice = st.radio(
-        "Which option do you choose?",
-        ("Door A", "Door B", "None of both"),
-        key=f"choice_{idx}",
-        index=("Door A", "Door B", "None of both").index(
-            st.session_state.responses.get(idx, "Door A")
-        ) if idx in st.session_state.responses else 0
+    st.session_state[f"temp_choice_{idx}"] = st.radio(
+    "Which option do you choose?",
+    ("Door A", "Door B", "None of both"),
+    key=f"radio_{idx}",
+    index=("Door A", "Door B", "None of both").index(
+        st.session_state[f"temp_choice_{idx}"]
     )
+)
 
-    # Save live the answer
-    st.session_state.responses[idx] = choice
+
+   
 
     # Navigation buttons
     col_back, col_next = st.columns([1, 5])
@@ -245,10 +248,12 @@ elif st.session_state.page == 'survey':
     with col_next:
         if idx < total_questions - 1:
             if st.button("Next"):
+                st.session_state.responses[idx] = st.session_state[f"temp_choice_{idx}"]
                 st.session_state.current_idx += 1
                 st.rerun()
         else:
             if st.button("Submit Survey"):
+                st.session_state.responses[idx] = st.session_state[f"temp_choice_{idx}"]
                 # Create DataFrame from responses
                 df_responses = pd.DataFrame([
                     {
@@ -337,7 +342,9 @@ elif st.session_state.page == 'demographics':
         sheet_demo.append_rows(demographic_response.values.tolist(), value_input_option="USER_ENTERED")
 
         #increase counter
+        sheet_meta = get_gsheet().worksheet("Meta")
         sheet_meta.update("A1", str(counter + 1))
+
 
         st.success("Thank you for participating in our study!")
         st.stop()
