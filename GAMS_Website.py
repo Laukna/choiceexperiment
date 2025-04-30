@@ -6,6 +6,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 from PIL import Image, ImageDraw
 
+
 def get_gsheet():
     scopes = [
         "https://www.googleapis.com/auth/spreadsheets",
@@ -17,8 +18,6 @@ def get_gsheet():
     )
     gc = gspread.authorize(credentials)
     return gc.open_by_key(st.secrets["gspread"]["gsheet_key"])
-
-
 # --- SETUP ---
 
 # Initialize session state variables
@@ -36,14 +35,13 @@ if 'demographic_data' not in st.session_state:
 design = pd.read_csv("Boarding_import.csv")
 
 # Counter file to track participants
-# Teilnehmerzähler aus Google Sheet laden oder initialisieren
-sheet_meta = get_gsheet().worksheet("Meta")
-try:
-    counter = int(sheet_meta.acell("A1").value)
-except:
-    counter = 1
-    sheet_meta.update("A1", "1")
+counter_file = "counter.txt"
+if not os.path.exists(counter_file):
+    with open(counter_file, "w") as f:
+        f.write("1")
 
+with open(counter_file, "r") as f:
+    counter = int(f.read().strip())
 
 # Ticket price by group
 if counter % 2 == 1:
@@ -53,13 +51,13 @@ else:
 
 # Image paths
 background_path = "Background.png"
-#door_marker_path = "/Users/lauraknappik/sciebo - Knappik, Laura (7ZX85D@rwth-aachen.de)@rwth-aachen.sciebo.de/Dokumente/Projekte/Optimal_board_and_alight/Choice_Experiment/DCE_Python/App_test/door_marker.png"
+door_marker_path = "door_marker.png"
 
 # --- HELPER FUNCTION ---
 
 def compose_image(D2D_value):
     base = Image.open(background_path).convert("RGBA")
-    #door_marker = Image.open(door_marker_path).convert("RGBA")
+    door_marker = Image.open(door_marker_path).convert("RGBA")
     
     if D2D_value == 0:
         door_size_x, door_size_y, door_x, door_y = 600, 800, 1900, 700
@@ -273,8 +271,10 @@ elif st.session_state.page == 'survey':
                 ])
 
                 # Save responses
+                # Save responses
                 sheet_responses = get_gsheet().worksheet("Responses")
                 sheet_responses.append_rows(df_responses.values.tolist(), value_input_option="USER_ENTERED")
+
 
 
                 # Switch to demographic questions
@@ -338,7 +338,6 @@ elif st.session_state.page == 'demographics':
 
         #increase counter
         sheet_meta.update("A1", str(counter + 1))
-
 
         st.success("Thank you for participating in our study!")
         st.stop()
