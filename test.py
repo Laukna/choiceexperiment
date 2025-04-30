@@ -8,16 +8,21 @@ from PIL import Image, ImageDraw
 
 
 def get_gsheet():
+    from google.oauth2.service_account import Credentials
+    import gspread
+
+    credentials_dict = dict(st.secrets["gspread"])  # convert TOML object to dict
     scopes = [
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive"
     ]
     credentials = Credentials.from_service_account_info(
-        st.secrets["gspread"],
+        credentials_dict,
         scopes=scopes
     )
     gc = gspread.authorize(credentials)
-    return gc.open_by_key(st.secrets["gspread"]["gsheet_key"])
+    return gc.open_by_key(credentials_dict["gsheet_key"])
+
 # --- SETUP ---
 
 # Initialize session state variables
