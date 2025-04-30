@@ -1,7 +1,23 @@
 import streamlit as st
 import pandas as pd
 import os
+import json
+import gspread
+from google.oauth2.service_account import Credentials
 from PIL import Image, ImageDraw
+
+def get_gsheet():
+    scopes = [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive"
+    ]
+    credentials = Credentials.from_service_account_info(
+        st.secrets["gspread"],
+        scopes=scopes
+    )
+    gc = gspread.authorize(credentials)
+    return gc.open_by_key(st.secrets["gspread"]["gsheet_key"])
+
 
 # --- SETUP ---
 
@@ -20,13 +36,14 @@ if 'demographic_data' not in st.session_state:
 design = pd.read_csv("Boarding_import.csv")
 
 # Counter file to track participants
-counter_file = "counter.txt"
-if not os.path.exists(counter_file):
-    with open(counter_file, "w") as f:
-        f.write("1")
+# Teilnehmerzähler aus Google Sheet laden oder initialisieren
+sheet_meta = get_gsheet().worksheet("Meta")
+try:
+    counter = int(sheet_meta.acell("A1").value)
+except:
+    counter = 1
+    sheet_meta.update("A1", "1")
 
-with open(counter_file, "r") as f:
-    counter = int(f.read().strip())
 
 # Ticket price by group
 if counter % 2 == 1:
@@ -256,11 +273,9 @@ elif st.session_state.page == 'survey':
                 ])
 
                 # Save responses
-                response_path = "responses.csv"
-                if not os.path.exists(response_path):
-                    df_responses.to_csv(response_path, index=False)
-                else:
-                    df_responses.to_csv(response_path, mode='a', header=False, index=False)
+                sheet_responses = get_gsheet().worksheet("Responses")
+                sheet_responses.append_rows(df_responses.values.tolist(), value_input_option="USER_ENTERED")
+
 
                 # Switch to demographic questions
                 st.session_state.page = 'demographics'
@@ -318,15 +333,12 @@ elif st.session_state.page == 'demographics':
 
         }])
 
-        demographic_path = "demographics.csv"
-        if not os.path.exists(demographic_path):
-            demographic_response.to_csv(demographic_path, index=False)
-        else:
-            demographic_response.to_csv(demographic_path, mode='a', header=False, index=False)
+        sheet_demo = get_gsheet().worksheet("Demographics")
+        sheet_demo.append_rows(demographic_response.values.tolist(), value_input_option="USER_ENTERED")
 
-        # Increase counter
-        with open(counter_file, "w") as f:
-            f.write(str(counter + 1))
+        #increase counter
+        sheet_meta.update("A1", str(counter + 1))
+
 
         st.success("Thank you for participating in our study!")
         st.stop()
