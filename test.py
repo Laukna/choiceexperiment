@@ -225,35 +225,32 @@ elif st.session_state.page == 'survey':
 
 
     # Get participant's choice
-    st.session_state[f"temp_choice_{idx}"] = st.radio(
-    "Which option do you choose?",
-    ("Door A", "Door B", "None of both"),
-    key=f"radio_{idx}",
-    index=("Door A", "Door B", "None of both").index(
-        st.session_state[f"temp_choice_{idx}"]
-    )
-)
-
-
-   
-
-    # Navigation buttons
-    col_back, col_next = st.columns([1, 5])
-
-    with col_back:
-        if st.button("Back") and idx > 0:
+    with st.form(key=f"form_{idx}"):
+        st.session_state[f"temp_choice_{idx}"] = st.radio(
+            "Which option do you choose?",
+            ("Door A", "Door B", "None of both"),
+            index=("Door A", "Door B", "None of both").index(
+                st.session_state[f"temp_choice_{idx}"]
+            )
+        )
+    
+        col_back, col_next = st.columns([1, 5])
+        with col_back:
+            back_clicked = st.form_submit_button("Back")
+        with col_next:
+            next_clicked = st.form_submit_button("Next" if idx < total_questions - 1 else "Submit Survey")
+    
+        if back_clicked and idx > 0:
             st.session_state.current_idx -= 1
             st.rerun()
-
-    with col_next:
-        if idx < total_questions - 1:
-            if st.button("Next"):
-                st.session_state.responses[idx] = st.session_state[f"temp_choice_{idx}"]
+    
+        if next_clicked:
+            st.session_state.responses[idx] = st.session_state[f"temp_choice_{idx}"]
+    
+            if idx < total_questions - 1:
                 st.session_state.current_idx += 1
                 st.rerun()
-        else:
-            if st.button("Submit Survey"):
-                st.session_state.responses[idx] = st.session_state[f"temp_choice_{idx}"]
+            else:
                 # Create DataFrame from responses
                 df_responses = pd.DataFrame([
                     {
@@ -270,19 +267,13 @@ elif st.session_state.page == 'survey':
                         'alt2_TS': questions.iloc[i]['alt2_TS'],
                         'alt2_T2DR': questions.iloc[i]['alt2_T2DR'],
                         'alt2_T2DS': questions.iloc[i]['alt2_T2DS']
-                        
                     }
                     for i in range(total_questions)
                 ])
-
-                # Save responses
-                # Save responses
+    
                 sheet_responses = get_gsheet().worksheet("Responses")
                 sheet_responses.append_rows(df_responses.values.tolist(), value_input_option="USER_ENTERED")
-
-
-
-                # Switch to demographic questions
+    
                 st.session_state.page = 'demographics'
                 st.rerun()
 
