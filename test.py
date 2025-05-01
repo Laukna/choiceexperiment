@@ -68,7 +68,7 @@ st.session_state.trip_duration = trip_duration
 
 # Image paths
 background_path = "Background.png"
-door_marker_path = "door_marker.png"
+#door_marker_path = "door_marker.png"
 
 # --- HELPER FUNCTION ---
 
@@ -77,13 +77,13 @@ def compose_image(D2D_value):
     door_marker = Image.open(door_marker_path).convert("RGBA")
     
     if D2D_value == 0:
-        door_size_x, door_size_y, door_x, door_y = 600, 800, 1900, 700
+        door_size_x, door_size_y, door_x, door_y = 700, 1000, 1900, 600
     elif D2D_value == 10:
-        door_size_x, door_size_y, door_x, door_y = 300, 600, 1100, 650
+        door_size_x, door_size_y, door_x, door_y = 350, 600, 1050, 700
     elif D2D_value == 30:
-        door_size_x, door_size_y, door_x, door_y = 150, 300, 550, 800
+        door_size_x, door_size_y, door_x, door_y = 120, 300, 550, 800
     elif D2D_value == 70:
-        door_size_x, door_size_y, door_x, door_y = 50, 120, 300, 880
+        door_size_x, door_size_y, door_x, door_y = 60, 150, 290, 870
     else:
         door_size_x, door_size_y = 400, 600
         door_x = int(1900 - D2D_value * 20)
@@ -92,7 +92,7 @@ def compose_image(D2D_value):
     draw = ImageDraw.Draw(base)
     draw.rectangle(
         [(door_x, door_y), (door_x + door_size_x, door_y + door_size_y)],
-        outline="cyan", width=8
+        outline="blue", width=8
     )
     return base
 
