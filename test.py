@@ -74,7 +74,7 @@ background_path = "Background.png"
 
 def compose_image(D2D_value):
     base = Image.open(background_path).convert("RGBA")
-    door_marker = Image.open(door_marker_path).convert("RGBA")
+#    door_marker = Image.open(door_marker_path).convert("RGBA")
     
     if D2D_value == 0:
         door_size_x, door_size_y, door_x, door_y = 700, 1000, 1900, 600
@@ -110,7 +110,7 @@ Dear Participant,
 
 Thank you for your interest in this study!
 
-This survey is part of a research project aimed at understanding how travelers make decisions when boarding underground trains (**subway**).
+This survey is part of a research project investigating how travelers make decisions when boarding (**subway**).
 
 ---
 
@@ -118,10 +118,11 @@ This survey is part of a research project aimed at understanding how travelers m
 
 **Set-up:**
 
-Imagine you are standing on a subway platform and planning to board a train. You haven’t positioned yourself yet and must now decide where on the platform you want to wait.
-In each question, you will see two alternative doors you could board through. Each door may belong to either 
-the next arriving train, or the following train (i.e. you'd skip the next one and wait for the train after).  
-In each question, you will be shown **two alternative boarding doors**, including the following information for each option:
+Imagine you are standing on a subway platform, about to decide where to wait for an arriving train.
+You haven’t positioned yourself yet and must now choose a spot on the platform.
+
+In each question, you will be shown two alternative boarding doors. Each door may belong to either the next train, or the following train (i.e., you would skip the upcoming one and wait for the train after).
+Each option will include the following information:
 """)
 
     st.image(
@@ -132,34 +133,40 @@ In each question, you will be shown **two alternative boarding doors**, includin
 
     st.markdown(f"""
 
-Note about the image: 
+Note about the image:
 
-The train is already shown at the platform just to help you visualize the distances to the doors.
-In reality, the train (or trains) have not yet arrived — you are choosing where to position yourself now.
+The train is shown only to help visualize the door locations.
+In reality, no train has arrived yet — you are choosing where to position yourself before any train arrives.
 
-- **Ticket price** This is your regular ticket price for your trip in Euros. It amounts to {ticket_price} Euros and does not change during the experiment.
+- **Ticket price** Your regular ticket costs {ticket_price} Euros. This remains constant throughout the experiment.
 
-- **Trip duration** This is the total travel time your trip takes from your origin to destination in minutes. It is {trip_duration} minutes and does not change during the experiment. 
+- **Trip duration** Your trip from origin to destination takes {trip_duration} minutes. This also remains unchanged. 
 
-- **Walking distance to door**: This indicates how far the door is from your current position on the platform.  
-  The corresponding door is highlighted with a **blue rectangle** in the image.
+- **Walking distance to door**: The distance from your current spot to the respective door. The selected door is marked with a **blue rectangle** in the image.
 
-- **Offered discount**: This is the amount subtracted from the regular trip price of **{ticket_price} Euros** if you choose this door to board.  
-  It represents an incentive for using a specific door.
+- **Offered discount**: A reduction from the regular ticket price if you board through this door. For example, a discount of 1 Euro means you would pay {ticket_price − 1} Euros.
 
-- **Time until train arrival**: This shows how long it will take until the train at this door arrives.  
-  If the time is shown with a "next train", for example, **"10 (next train)"**, this means the door is part of the **next trip** — i.e., you would ignore the upcoming train and wait for the subsequent train.
+- **Time until train arrival**: This shows how long it will take until the train at this door arrives.
+If the label says just a number, e.g., “10”, it means the door belongs to the upcoming train (the one arriving next).
+If the label says “10 (next train)”, it means the door belongs to the train after the upcoming one — so you would skip the first train and board the following one.
 
  
 ---
 
 **What you will do:**
 
-You will be presented with a series of these boarding choices.  
-In each case, your task is to **select the door you would prefer to use**. If neither door A nor door B suits you, you can opt-out.   
-There are no right or wrong answers — we are only interested in your personal preferences.
+You will see 12 of these door choice questions.
+
+In each case, your task is to choose the door you would prefer to board through.
+If neither option suits you, you may choose to opt out.
+
+There are no right or wrong answers — we are interested in your personal preferences.
 
 ---
+
+**Demographic Information:**
+
+At the end of the survey, we will ask a few optional questions about your background (e.g., age group, gender, travel frequency). These help us better interpret the results and remain completely anonymous.
 
 **Data Protection and Confidentiality:**
 
@@ -172,9 +179,6 @@ There are no right or wrong answers — we are only interested in your personal 
 
 If you have any questions about the study, please contact **Laura Knappik** at **knappik@analytics.rwth-aachen.de**.
 
-**Demographic Information:**
-
-At the end of the survey, we will ask a few optional questions about your background (e.g., age group, gender, travel frequency). These help us better interpret the results and remain completely anonymous.
 
 ---
 
