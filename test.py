@@ -144,7 +144,7 @@ In reality, no train has arrived yet — you are choosing where to position your
 
 - **Walking distance to door**: The distance from your current spot to the respective door. The selected door is marked with a **blue rectangle** in the image.
 
-- **Offered discount**: A reduction from the regular ticket price if you board through this door. For example, a discount of 1 Euro means you would pay {ticket_price − 1} Euros.
+- **Offered discount**: A reduction from the regular ticket price if you board through this door. For example, a discount of 1 Euro means you would pay {ticket_price}-1 Euros.
 
 - **Time until train arrival**: This shows how long it will take until the train at this door arrives.
 If the label says just a number, e.g., “10”, it means the door belongs to the upcoming train (the one arriving next).
