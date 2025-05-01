@@ -48,11 +48,23 @@ if not os.path.exists(counter_file):
 with open(counter_file, "r") as f:
     counter = int(f.read().strip())
 
-# Ticket price by group
-if counter % 2 == 1:
+# Assign both price and travel time (TT) based on participant counter
+group_id = counter % 4
+
+if group_id in [0, 1]:
     ticket_price = 3.8
 else:
     ticket_price = 2.8
+
+if group_id in [0, 2]:
+    trip_duration = 10
+else:
+    trip_duration = 60
+
+# Optional: store in session state for later use
+st.session_state.ticket_price = ticket_price
+st.session_state.trip_duration = trip_duration
+
 
 # Image paths
 background_path = "Background.png"
@@ -98,7 +110,7 @@ Dear Participant,
 
 Thank you for your interest in this study!
 
-This survey is part of a research project aimed at understanding how travelers make decisions when boarding underground trains (**U-Bahn**).
+This survey is part of a research project aimed at understanding how travelers make decisions when boarding underground trains (**subway**).
 
 ---
 
@@ -106,7 +118,9 @@ This survey is part of a research project aimed at understanding how travelers m
 
 **Set-up:**
 
-Imagine you are standing on an U-Bahn platform and would like to board the train.  
+Imagine you are standing on a subway platform and planning to board a train. You haven’t positioned yourself yet and must now decide where on the platform you want to wait.
+In each question, you will see two alternative doors you could board through. Each door may belong to either 
+the next arriving train, or the following train (i.e. you'd skip the next one and wait for the train after).  
 In each question, you will be shown **two alternative boarding doors**, including the following information for each option:
 """)
 
@@ -118,6 +132,15 @@ In each question, you will be shown **two alternative boarding doors**, includin
 
     st.markdown(f"""
 
+Note about the image: 
+
+The train is already shown at the platform just to help you visualize the distances to the doors.
+In reality, the train (or trains) have not yet arrived — you are choosing where to position yourself now.
+
+- **Ticket price** This is your regular ticket price for your trip in Euros. It amounts to {ticket_price} Euros and does not change during the experiment.
+
+- **Trip duration** This is the total travel time your trip takes from your origin to destination in minutes. It is {trip_duration} minutes and does not change during the experiment. 
+
 - **Walking distance to door**: This indicates how far the door is from your current position on the platform.  
   The corresponding door is highlighted with a **blue rectangle** in the image.
 
@@ -127,12 +150,13 @@ In each question, you will be shown **two alternative boarding doors**, includin
 - **Time until train arrival**: This shows how long it will take until the train at this door arrives.  
   If the time is shown with a "next train", for example, **"10 (next train)"**, this means the door is part of the **next trip** — i.e., you would ignore the upcoming train and wait for the subsequent train.
 
+ 
 ---
 
 **What you will do:**
 
 You will be presented with a series of these boarding choices.  
-In each case, your task is to **select the door you would prefer to use**.  
+In each case, your task is to **select the door you would prefer to use**. If neither door A nor door B suits you, you can opt-out.   
 There are no right or wrong answers — we are only interested in your personal preferences.
 
 ---
@@ -174,6 +198,8 @@ elif st.session_state.page == 'survey':
 
     Remember: The regular ticket price for this trip is **{ticket_price} Euros**.  
     Each door option may offer a discount that will reduce this price.
+
+    Remember: The total travel time for your trip is **{trip_duration}** minutes. 
 
     Remember: **Next train** indicates waiting for the next trip, not taking the current one. 
     """)
@@ -260,6 +286,8 @@ elif st.session_state.page == 'survey':
                 df_responses = pd.DataFrame([
                     {
                         'participant_number': counter,
+                        'ticket_price': st.session_state.ticket_price,
+                        'trip_duration': st.session_state.trip_duration,
                         'choice_set': i + 1,
                         'choice': st.session_state.responses[i],
                         'alt1_D': questions.iloc[i]['alt1_D'],
@@ -306,7 +334,7 @@ elif st.session_state.page == 'demographics':
     )
 
     travel_freq_1 = st.selectbox(
-        "How often have you approximately traveled by ***U-Bahn*** in the last 12 months?",
+        "How often have you approximately traveled by ***subway*** in the last 12 months?",
         ["Prefer not to say", "None", "Daily", "Weekly", "Monthly", "Yearly"]
     )
 
