@@ -125,7 +125,7 @@ In each question, you will be shown **two alternative boarding doors**, includin
   It represents an incentive for using a specific door.
 
 - **Time until train arrival**: This shows how long it will take until the train at this door arrives.  
-  If the time is shown with a "next", for example, **"10 (next)"**, this means the door is part of the **next trip** — i.e., you would ignore the upcoming train and wait for the subsequent train.
+  If the time is shown with a "next train", for example, **"10 (next train)"**, this means the door is part of the **next trip** — i.e., you would ignore the upcoming train and wait for the subsequent train.
 
 ---
 
@@ -175,7 +175,7 @@ elif st.session_state.page == 'survey':
     Remember: The regular ticket price for this trip is **{ticket_price} Euros**.  
     Each door option may offer a discount that will reduce this price.
 
-    Remember: **Next** indicates waiting for the next trip, not taking the current one. 
+    Remember: **Next train** indicates waiting for the next trip, not taking the current one. 
     """)
 
     
@@ -205,7 +205,7 @@ elif st.session_state.page == 'survey':
         discount_amount_1 = round(ticket_price * question['alt1_D'] / 100, 2)
         st.markdown(f"**Offered discount**: {question['alt1_D']} % (−{discount_amount_1} €)")
         if question['alt1_TS'] == 1:
-            arrival_time_1 = f"{question['alt1_T2DR'] + question['alt1_T2DS']} min (next)"
+            arrival_time_1 = f"{question['alt1_T2DR'] + question['alt1_T2DS']} min (next train)"
         else:
             arrival_time_1 = f"{question['alt1_T2DR']} min"
 
@@ -220,7 +220,7 @@ elif st.session_state.page == 'survey':
         discount_amount_2 = round(ticket_price * question['alt2_D'] / 100, 2)
         st.markdown(f"**Offered discount**: {question['alt2_D']} % (−{discount_amount_2} €)")
         if question['alt2_TS'] == 1:
-            arrival_time_2 = f"{question['alt2_T2DR'] + question['alt2_T2DS']} min (next)"
+            arrival_time_2 = f"{question['alt2_T2DR'] + question['alt2_T2DS']} min (next train)"
         else:
             arrival_time_2 = f"{question['alt2_T2DR']} min"
 
