@@ -185,53 +185,52 @@ By continuing, you confirm that you have read and understood the information pro
 
     # --- COMPREHENSION CHECK ---
 
+    # --- COMPREHENSION CHECK ---
     st.markdown("### Quick Check Before Starting")
-    
     st.markdown("""
     To make sure you have read and understood the key information, please answer the following short questions in order to proceed:
     """)
+
+    with st.form("comprehension_form"):
+        price_options = [
+            f"€{ticket_price - 2:.2f}",
+            f"€{ticket_price - 1:.2f}",
+            f"€{ticket_price:.2f}",  # correct
+            f"€{ticket_price + 1:.2f}"
+        ]
+        answer_price = st.radio(
+            "1. What is the regular ticket price for your trip in this experiment?",
+            options=price_options,
+            key="comprehension_price"
+        )
     
-    # --- 1. Ticket price question ---
-    price_options = [
-        f"€{ticket_price - 2:.2f}",
-        f"€{ticket_price - 1:.2f}",
-        f"€{ticket_price:.2f}",  # correct
-        f"€{ticket_price + 1:.2f}"
-    ]
-    answer_price = st.radio(
-        "1. What is the regular ticket price for your trip in this experiment?",
-        options=price_options,
-        key="comprehension_price"
-    )
+        duration_options = [
+            f"{trip_duration - 50} minutes" if trip_duration == 60 else "5 minutes",
+            f"{trip_duration - 1} minutes",
+            f"{trip_duration} minutes",
+            f"{trip_duration + 10} minutes"
+        ]
+        answer_duration = st.radio(
+            "2. How long is your trip from origin to destination?",
+            options=duration_options,
+            key="comprehension_duration"
+        )
     
-    # --- 2. Trip duration question ---
-    duration_options = [
-        f"{trip_duration - 50} minutes" if trip_duration == 60 else "5 minutes",
-        f"{trip_duration - 1} minutes",
-        f"{trip_duration} minutes",  # correct
-        f"{trip_duration + 10} minutes"
-    ]
-    answer_duration = st.radio(
-        "2. How long is your trip from origin to destination?",
-        options=duration_options,
-        key="comprehension_duration"
-    )
+        travel_options = [
+            "With friends and luggage",
+            "Alone with a suitcase",
+            "Alone with a small backpack",  # correct
+            "In a group with bikes"
+        ]
+        answer_alone = st.radio(
+            "3. How are you traveling in this experiment?",
+            options=travel_options,
+            key="comprehension_alone"
+        )
     
-    # --- 3. Travel setup question ---
-    travel_options = [
-        "With friends and luggage",
-        "Alone with a suitcase",
-        "Alone with a small backpack",  # correct
-        "In a group with bikes"
-    ]
-    answer_alone = st.radio(
-        "3. How are you traveling in this experiment?",
-        options=travel_options,
-        key="comprehension_alone"
-    )
+        confirm_clicked = st.form_submit_button("Confirm Answers")
     
-    # --- Confirm button ---
-    if st.button("Confirm Answers"):
+    if confirm_clicked:
         is_correct_price = answer_price == f"€{ticket_price:.2f}"
         is_correct_duration = answer_duration == f"{trip_duration} minutes"
         is_correct_alone = answer_alone == "Alone with a small backpack"
@@ -242,6 +241,7 @@ By continuing, you confirm that you have read and understood the information pro
         else:
             st.error("One or more answers are incorrect. Please read the instructions above again carefully.")
             st.session_state.allow_start = False
+
     
     # --- Conditional start button ---
     if st.session_state.get("allow_start", False) and st.button("Start Survey"):
@@ -415,7 +415,8 @@ elif st.session_state.page == 'demographics':
         # Make sure this is at the same level as the other inputs
         submitted = st.form_submit_button("Submit Demographic Data")
 
-    if submitted:
+    if submitted and not st.session_state.get("submitted_demo", False):
+    # Save demographic data
         demographic_response = pd.DataFrame([{
             'participant_number': counter,
             'age': age,
@@ -424,12 +425,13 @@ elif st.session_state.page == 'demographics':
             'ubahn_frequency': travel_freq_1,
             'mobility': mobility
         }])
-
+    
         sheet_demo = get_gsheet().worksheet("Demographics")
         sheet_demo.append_rows(demographic_response.values.tolist(), value_input_option="USER_ENTERED")
-
+    
         sheet_meta.update("A1", [[str(counter + 1)]])
-
+        
+        st.session_state.submitted_demo = True  # ✅ prevent further submissions
+    
         st.success("Thank you for participating in our study!")
         st.stop()
-
