@@ -382,25 +382,24 @@ elif st.session_state.page == 'demographics':
     Your answers are completely voluntary, anonymous, and will only be used for academic research purposes.
     """)
 
-    # Questions
     with st.form("demographics_form"):
         age = st.number_input("What is your age?", min_value=18, max_value=100, step=1)
-    
+
         gender = st.selectbox(
             "What is your gender?",
             ["Prefer not to say", "Female", "Male", "Diverse"]
         )
-    
+
         travel_freq = st.selectbox(
             "How often have you approximately traveled by train in the last 12 months?",
             ["Prefer not to say", "None", "Daily", "Weekly", "Monthly", "Yearly"]
         )
-    
+
         travel_freq_1 = st.selectbox(
             "How often have you approximately traveled by ***subway*** in the last 12 months?",
             ["Prefer not to say", "None", "Daily", "Weekly", "Monthly", "Yearly"]
         )
-    
+
         mobility = st.select_slider(
             "How would you assess your mobility?",
             options=[
@@ -412,28 +411,25 @@ elif st.session_state.page == 'demographics':
                 "4 - Unstable / Handicapped"
             ]
         )
-    
+
+        # Make sure this is at the same level as the other inputs
         submitted = st.form_submit_button("Submit Demographic Data")
 
-if submitted:
-    # Save demographic data
-    demographic_response = pd.DataFrame([{
-        'participant_number': counter,
-        'age': age,
-        'gender': gender,
-        'travel_frequency': travel_freq,
-        'ubahn_frequency': travel_freq_1,
-        'mobility': mobility
-    }])
+    if submitted:
+        demographic_response = pd.DataFrame([{
+            'participant_number': counter,
+            'age': age,
+            'gender': gender,
+            'travel_frequency': travel_freq,
+            'ubahn_frequency': travel_freq_1,
+            'mobility': mobility
+        }])
 
+        sheet_demo = get_gsheet().worksheet("Demographics")
+        sheet_demo.append_rows(demographic_response.values.tolist(), value_input_option="USER_ENTERED")
 
-    sheet_demo = get_gsheet().worksheet("Demographics")
-    sheet_demo.append_rows(demographic_response.values.tolist(), value_input_option="USER_ENTERED")
+        sheet_meta.update("A1", [[str(counter + 1)]])
 
-    #Increase the counter in the Meta sheet
-    sheet_meta.update("A1", [[str(counter + 1)]])
-
-
-    st.success("Thank you for participating in our study!")
-    st.stop()
+        st.success("Thank you for participating in our study!")
+        st.stop()
 
