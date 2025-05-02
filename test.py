@@ -374,7 +374,7 @@ elif st.session_state.page == 'survey':
 
 
 elif st.session_state.page == 'demographics':
-    st.title("A Few More Questions (Optional)")
+    st.title("A Few More Questions")
     st.write("""
     Thank you very much for your participation!
 
