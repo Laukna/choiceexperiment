@@ -383,54 +383,57 @@ elif st.session_state.page == 'demographics':
     """)
 
     # Questions
-    age = st.number_input("What is your age?", min_value=18, max_value=100, step=1)
+    with st.form("demographics_form"):
+        age = st.number_input("What is your age?", min_value=18, max_value=100, step=1)
+    
+        gender = st.selectbox(
+            "What is your gender?",
+            ["Prefer not to say", "Female", "Male", "Diverse"]
+        )
+    
+        travel_freq = st.selectbox(
+            "How often have you approximately traveled by train in the last 12 months?",
+            ["Prefer not to say", "None", "Daily", "Weekly", "Monthly", "Yearly"]
+        )
+    
+        travel_freq_1 = st.selectbox(
+            "How often have you approximately traveled by ***subway*** in the last 12 months?",
+            ["Prefer not to say", "None", "Daily", "Weekly", "Monthly", "Yearly"]
+        )
+    
+        mobility = st.select_slider(
+            "How would you assess your mobility?",
+            options=[
+                "Prefer not to say",
+                "0 - No problems",
+                "1 - Minor limitations",
+                "2 - Moderate limitations",
+                "3 - Severe limitations",
+                "4 - Unstable / Handicapped"
+            ]
+        )
+    
+        submitted = st.form_submit_button("Submit Demographic Data")
 
-    gender = st.selectbox(
-        "What is your gender?",
-        ["Prefer not to say", "Female", "Male", "Diverse"]
-    )
-
-    travel_freq = st.selectbox(
-        "How often have you approximately traveled by train in the last 12 months?",
-        ["Prefer not to say", "None", "Daily", "Weekly", "Monthly", "Yearly"]
-    )
-
-    travel_freq_1 = st.selectbox(
-        "How often have you approximately traveled by ***subway*** in the last 12 months?",
-        ["Prefer not to say", "None", "Daily", "Weekly", "Monthly", "Yearly"]
-    )
-
-    mobility = st.select_slider(
-        "How would you assess your mobility?",
-        options=[
-            "Prefer not to say",
-            "0 - No problems",
-            "1 - Minor limitations",
-            "2 - Moderate limitations",
-            "3 - Severe limitations",
-            "4 - Unstable / Handicapped"
-        ]
-    )
-
-    if st.button("Submit Demographic Data"):
-        # Save demographic data
-        demographic_response = pd.DataFrame([{
-            'participant_number': counter,
-            'age': age,
-            'gender': gender,
-            'travel_frequency': travel_freq,
-            'ubahn_frequency' : travel_freq_1,
-            'mobility': mobility
-
-        }])
-
-        sheet_demo = get_gsheet().worksheet("Demographics")
-        sheet_demo.append_rows(demographic_response.values.tolist(), value_input_option="USER_ENTERED")
-
-        #Increase the counter in the Meta sheet
-        sheet_meta.update("A1", [[str(counter + 1)]])
+if submitted:
+    # Save demographic data
+    demographic_response = pd.DataFrame([{
+        'participant_number': counter,
+        'age': age,
+        'gender': gender,
+        'travel_frequency': travel_freq,
+        'ubahn_frequency': travel_freq_1,
+        'mobility': mobility
+    }])
 
 
-        st.success("Thank you for participating in our study!")
-        st.stop()
-  
+    sheet_demo = get_gsheet().worksheet("Demographics")
+    sheet_demo.append_rows(demographic_response.values.tolist(), value_input_option="USER_ENTERED")
+
+    #Increase the counter in the Meta sheet
+    sheet_meta.update("A1", [[str(counter + 1)]])
+
+
+    st.success("Thank you for participating in our study!")
+    st.stop()
+
