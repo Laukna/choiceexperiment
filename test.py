@@ -194,53 +194,59 @@ st.markdown("""
 To make sure you have read and understood the key information, please answer the following short questions in order to proceed:
 """)
 
-# 1. Ticket price question
+# --- 1. Ticket price question ---
+price_options = [
+    f"€{ticket_price - 2:.2f}",
+    f"€{ticket_price - 1:.2f}",
+    f"€{ticket_price:.2f}",  # correct
+    f"€{ticket_price + 1:.2f}"
+]
 answer_price = st.radio(
     "1. What is the regular ticket price for your trip in this experiment?",
-    options=["€1.80", "€2.80", "€3.80", "€4.80"],
-    index=0,
+    options=price_options,
     key="comprehension_price"
 )
 
-# 2. Trip duration question
+# --- 2. Trip duration question ---
+duration_options = [
+    f"{trip_duration - 50} minutes" if trip_duration == 60 else "5 minutes",
+    f"{trip_duration - 1} minutes",
+    f"{trip_duration} minutes",  # correct
+    f"{trip_duration + 10} minutes"
+]
 answer_duration = st.radio(
     "2. How long is your trip from origin to destination?",
-    options=["10 minutes", "30 minutes", "60 minutes", "90 minutes"],
-    index=0,
+    options=duration_options,
     key="comprehension_duration"
 )
 
-# 3. Travel setup question
+# --- 3. Travel setup question ---
+travel_options = [
+    "With friends and luggage",
+    "Alone with a suitcase",
+    "Alone with a small backpack",  # correct
+    "In a group with bikes"
+]
 answer_alone = st.radio(
     "3. How are you traveling in this experiment?",
-    options=[
-        "With friends and luggage",
-        "Alone with a suitcase",
-        "Alone with a small backpack",
-        "In a group with bikes"
-    ],
-    index=0,
+    options=travel_options,
     key="comprehension_alone"
 )
 
-# Confirm answers
+# --- Confirm button ---
 if st.button("Confirm Answers"):
-    correct_price = f"€{ticket_price:.1f}"
-    correct_duration = f"{trip_duration} minutes"
-    correct_alone = "Alone with a small backpack"
+    is_correct_price = answer_price == f"€{ticket_price:.2f}"
+    is_correct_duration = answer_duration == f"{trip_duration} minutes"
+    is_correct_alone = answer_alone == "Alone with a small backpack"
 
-    if (
-        answer_price == correct_price and
-        answer_duration == correct_duration and
-        answer_alone == correct_alone
-    ):
+    if is_correct_price and is_correct_duration and is_correct_alone:
         st.success("All correct – you may now proceed to the survey.")
         st.session_state.allow_start = True
     else:
         st.error("One or more answers are incorrect. Please read the instructions above again carefully.")
         st.session_state.allow_start = False
 
-# Start button only shown if answers confirmed correctly
+# --- Conditional start button ---
 if st.session_state.get("allow_start", False) and st.button("Start Survey"):
     st.session_state.page = 'survey'
     st.session_state.current_idx = 0  # reset index
