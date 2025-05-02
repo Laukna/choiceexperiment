@@ -120,6 +120,7 @@ This survey is part of a research project investigating how travelers make decis
 
 Imagine you are standing on a subway platform, about to decide where to wait for an arriving train.
 You haven’t positioned yourself yet and must now choose a spot on the platform.
+You are traveling alone with a small backpack on your shoulders. 
 
 In each question, you will be shown two alternative boarding doors. Each door may belong to either the next train, or the following train (i.e., you would skip the upcoming one and wait for the train after).
 Each option will include the following information:
@@ -138,9 +139,9 @@ Note about the image:
 The train is shown only to help visualize the door locations.
 In reality, no train has arrived yet — you are choosing where to position yourself before any train arrives.
 
-- **Ticket price** Your regular ticket costs {ticket_price} Euros. This remains constant throughout the experiment.
+- **Ticket price** Your regular ticket costs **{ticket_price} Euros**. This remains constant throughout the experiment.
 
-- **Trip duration** Your trip from origin to destination takes {trip_duration} minutes. This also remains unchanged. 
+- **Trip duration** Your trip from origin to destination takes **{trip_duration} minutes**. This also remains unchanged. 
 
 - **Walking distance to door**: The distance from your current spot to the respective door. The selected door is marked with a **blue rectangle** in the image.
 
@@ -185,12 +186,66 @@ If you have any questions about the study, please contact **Laura Knappik** at *
 By continuing, you confirm that you have read and understood the information provided above and agree to participate under these conditions.
 """)
 
+    # --- COMPREHENSION CHECK ---
 
+st.markdown("### Quick Check Before Starting")
 
-    if st.button("Start Survey"):
-        st.session_state.page = 'survey'
-        st.session_state.current_idx = 0  # reset index
-        st.rerun()
+st.markdown("""
+To make sure you have read and understood the key information, please answer the following short questions in order to proceed:
+""")
+
+# 1. Ticket price question
+answer_price = st.radio(
+    "1. What is the regular ticket price for your trip in this experiment?",
+    options=["€1.80", "€2.80", "€3.80", "€4.80"],
+    index=0,
+    key="comprehension_price"
+)
+
+# 2. Trip duration question
+answer_duration = st.radio(
+    "2. How long is your trip from origin to destination?",
+    options=["10 minutes", "30 minutes", "60 minutes", "90 minutes"],
+    index=0,
+    key="comprehension_duration"
+)
+
+# 3. Travel setup question
+answer_alone = st.radio(
+    "3. How are you traveling in this experiment?",
+    options=[
+        "With friends and luggage",
+        "Alone with a suitcase",
+        "Alone with a small backpack",
+        "In a group with bikes"
+    ],
+    index=0,
+    key="comprehension_alone"
+)
+
+# Confirm answers
+if st.button("Confirm Answers"):
+    correct_price = f"€{ticket_price:.1f}"
+    correct_duration = f"{trip_duration} minutes"
+    correct_alone = "Alone with a small backpack"
+
+    if (
+        answer_price == correct_price and
+        answer_duration == correct_duration and
+        answer_alone == correct_alone
+    ):
+        st.success("All correct – you may now proceed to the survey.")
+        st.session_state.allow_start = True
+    else:
+        st.error("One or more answers are incorrect. Please read the instructions above again carefully.")
+        st.session_state.allow_start = False
+
+# Start button only shown if answers confirmed correctly
+if st.session_state.get("allow_start", False) and st.button("Start Survey"):
+    st.session_state.page = 'survey'
+    st.session_state.current_idx = 0  # reset index
+    st.rerun()
+
 
 # --- SURVEY PAGE ---
 
