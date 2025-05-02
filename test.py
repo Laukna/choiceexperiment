@@ -39,14 +39,11 @@ if 'demographic_data' not in st.session_state:
 # Load predefined choice sets
 design = pd.read_csv("Boarding_import.csv")
 
-# Counter file to track participants
-counter_file = "counter.txt"
-if not os.path.exists(counter_file):
-    with open(counter_file, "w") as f:
-        f.write("1")
+# Get participant counter from Google Sheet
+sheet_meta = get_gsheet().worksheet("Meta")
+counter_cell = sheet_meta.acell("A1").value
+counter = int(counter_cell)
 
-with open(counter_file, "r") as f:
-    counter = int(f.read().strip())
 
 # Assign both price and travel time (TT) based on participant counter
 group_id = counter % 4
@@ -430,8 +427,7 @@ elif st.session_state.page == 'demographics':
         sheet_demo = get_gsheet().worksheet("Demographics")
         sheet_demo.append_rows(demographic_response.values.tolist(), value_input_option="USER_ENTERED")
 
-        #increase counter
-        sheet_meta = get_gsheet().worksheet("Meta")
+        #Increase the counter in the Meta sheet
         sheet_meta.update("A1", [[str(counter + 1)]])
 
 
