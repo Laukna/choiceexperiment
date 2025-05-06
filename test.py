@@ -79,7 +79,6 @@ background_path = "Background.png"
 #door_marker_path = "door_marker.png"
 
 # --- HELPER FUNCTION ---
-@st.cache_data
 def load_pre_rendered_image(D2D_value):
     path = f"door_images/door_d2d_{D2D_value}.png"
     return Image.open(path)
@@ -245,6 +244,7 @@ By continuing, you confirm that you have read and understood the information pro
     # --- Conditional start button ---
     if st.session_state.get("allow_start", False) and st.button("Start Survey"):
         st.session_state.page = 'survey'
+        st.session_state.current_idx = 0  # reset index
         st.rerun()
 
 
@@ -338,16 +338,38 @@ elif st.session_state.page == 'survey':
     
         if next_clicked:
             st.session_state.responses[idx] = st.session_state[f"temp_choice_{idx}"]
-        
+    
             if idx < total_questions - 1:
                 st.session_state.current_idx += 1
-            else:
-                st.session_state.page = 'demographics'
-        
                 st.rerun()
-
-
-
+            else:
+                # Create DataFrame from responses
+                df_responses = pd.DataFrame([
+                    {
+                        'participant_number': counter,
+                        'ticket_price': st.session_state.ticket_price,
+                        'trip_duration': st.session_state.trip_duration,
+                        'choice_set': i + 1,
+                        'choice': st.session_state.responses[i],
+                        'alt1_D': questions.iloc[i]['alt1_D'],
+                        'alt1_D2D': questions.iloc[i]['alt1_D2D'],
+                        'alt1_TS': questions.iloc[i]['alt1_TS'],
+                        'alt1_T2DR': questions.iloc[i]['alt1_T2DR'],
+                        'alt1_T2DS': questions.iloc[i]['alt1_T2DS'],
+                        'alt2_D': questions.iloc[i]['alt2_D'],
+                        'alt2_D2D': questions.iloc[i]['alt2_D2D'],
+                        'alt2_TS': questions.iloc[i]['alt2_TS'],
+                        'alt2_T2DR': questions.iloc[i]['alt2_T2DR'],
+                        'alt2_T2DS': questions.iloc[i]['alt2_T2DS']
+                    }
+                    for i in range(total_questions)
+                ])
+    
+                sheet_responses = get_gsheet().worksheet("Responses")
+                sheet_responses.append_rows(df_responses.values.tolist(), value_input_option="USER_ENTERED")
+    
+                st.session_state.page = 'demographics'
+                st.rerun()
 
 
 elif st.session_state.page == 'demographics':
@@ -391,36 +413,12 @@ elif st.session_state.page == 'demographics':
                 "4 - Unstable / Handicapped"
             ]
         )
+
+        # Make sure this is at the same level as the other inputs
         submitted = st.form_submit_button("Submit Demographic Data")
-    
-    # Make sure this is at the same level as the other inputs
+
     if submitted and not st.session_state.get("submitted_demo", False):
-        # Submit all responses once here
-        df_responses = pd.DataFrame([
-            {
-                'participant_number': counter,
-                'ticket_price': st.session_state.ticket_price,
-                'trip_duration': st.session_state.trip_duration,
-                'choice_set': i + 1,
-                'choice': st.session_state.responses.get(i, ""),
-                'alt1_D': design.iloc[i]['alt1_D'],
-                'alt1_D2D': design.iloc[i]['alt1_D2D'],
-                'alt1_TS': design.iloc[i]['alt1_TS'],
-                'alt1_T2DR': design.iloc[i]['alt1_T2DR'],
-                'alt1_T2DS': design.iloc[i]['alt1_T2DS'],
-                'alt2_D': design.iloc[i]['alt2_D'],
-                'alt2_D2D': design.iloc[i]['alt2_D2D'],
-                'alt2_TS': design.iloc[i]['alt2_TS'],
-                'alt2_T2DR': design.iloc[i]['alt2_T2DR'],
-                'alt2_T2DS': design.iloc[i]['alt2_T2DS']
-            }
-            for i in range(len(design))
-        ])
-        
-        sheet_responses = get_gsheet().worksheet("Responses")
-        sheet_responses.append_rows(df_responses.values.tolist(), value_input_option="USER_ENTERED")
-        
-        # Save demographic data
+    # Save demographic data
         demographic_response = pd.DataFrame([{
             'participant_number': counter,
             'age': age,
@@ -429,17 +427,18 @@ elif st.session_state.page == 'demographics':
             'ubahn_frequency': travel_freq_1,
             'mobility': mobility
         }])
-        
+    
         sheet_demo = get_gsheet().worksheet("Demographics")
         sheet_demo.append_rows(demographic_response.values.tolist(), value_input_option="USER_ENTERED")
-        
+    
         sheet_meta = get_gsheet().worksheet("Meta")
         sheet_meta.update("A1", [[str(counter + 1)]])
+
         
-        st.session_state.submitted_demo = True
+        st.session_state.submitted_demo = True  # ✅ prevent further submissions
+    
         st.session_state.page = 'end'
         st.rerun()
-
 
 elif st.session_state.page == 'end':
     st.title("Thank You for Your Participation!")
@@ -460,4 +459,3 @@ elif st.session_state.page == 'end':
     """)
 
         
-
