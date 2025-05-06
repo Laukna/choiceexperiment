@@ -342,10 +342,11 @@ elif st.session_state.page == 'survey':
         
             if idx < total_questions - 1:
                 st.session_state.current_idx += 1
-                st.rerun()
             else:
                 st.session_state.page = 'demographics'
-                st.rerun()
+        
+            st.rerun()
+
 
 
 
