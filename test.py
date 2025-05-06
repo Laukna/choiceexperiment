@@ -79,49 +79,9 @@ background_path = "Background.png"
 #door_marker_path = "door_marker.png"
 
 # --- HELPER FUNCTION ---
-@st.cache_resource
-def get_background():
-    return Image.open(background_path).convert("RGBA")
-
-def compose_image(D2D_value):
-    base = get_background().copy()  # Use a cached copy!
-
-#    door_marker = Image.open(door_marker_path).convert("RGBA")
-    
-    if D2D_value == 0:
-        door_size_x, door_size_y, door_x, door_y = 700, 1000, 1900, 600
-    elif D2D_value == 10:
-        door_size_x, door_size_y, door_x, door_y = 350, 600, 1050, 700
-    elif D2D_value == 30:
-        door_size_x, door_size_y, door_x, door_y = 120, 300, 550, 800
-    elif D2D_value == 70:
-        door_size_x, door_size_y, door_x, door_y = 60, 150, 290, 870
-    else:
-        door_size_x, door_size_y = 400, 600
-        door_x = int(1900 - D2D_value * 20)
-        door_y = int(700 - D2D_value * 2)
-
-    draw = ImageDraw.Draw(base)
-    # Map D2D to line width
-    if D2D_value == 0:
-        line_width = 16
-    elif D2D_value == 10:
-        line_width = 12
-    elif D2D_value == 30:
-        line_width = 10
-    elif D2D_value == 70:
-        line_width = 8
-    else:
-        line_width = 8  # Default if unexpected D2D value
-    
-    draw.rectangle(
-        [(door_x, door_y), (door_x + door_size_x, door_y + door_size_y)],
-        outline="yellow",
-        width=line_width
-    )
-
-    return base
-
+def load_pre_rendered_image(D2D_value):
+    path = f"door_images/door_d2d_{D2D_value}.png"
+    return Image.open(path)
 
 # --- START PAGE ---
 
@@ -318,8 +278,9 @@ elif st.session_state.page == 'survey':
     st.markdown(f"### Question {idx+1} of {total_questions}")
 
     # Create images
-    image_A = compose_image(question['alt1_D2D'])
-    image_B = compose_image(question['alt2_D2D'])
+    image_A = load_pre_rendered_image(question['alt1_D2D'])
+    image_B = load_pre_rendered_image(question['alt2_D2D'])
+
 
 
     col1, col2 = st.columns(2)
