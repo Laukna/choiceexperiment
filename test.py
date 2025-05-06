@@ -89,7 +89,7 @@ def compose_image(D2D_value):
     draw = ImageDraw.Draw(base)
     draw.rectangle(
         [(door_x, door_y), (door_x + door_size_x, door_y + door_size_y)],
-        outline="blue", width=8
+        outline="yellow", width=8
     )
     return base
 
@@ -107,7 +107,7 @@ Dear Participant,
 
 Thank you for your interest in this study!
 
-This survey is part of a research project investigating how travelers make decisions when boarding (**subway**).
+This survey is part of a research project investigating how travelers make decisions when boarding public transport vehicles (**subway**).
 
 ---
 
@@ -119,13 +119,13 @@ Imagine you are standing on a subway platform, about to decide where to wait for
 You haven’t positioned yourself yet and must now choose a spot on the platform.
 You are traveling alone with a small backpack on your shoulders. 
 
-In each question, you will be shown two alternative boarding doors. Each door may belong to either the next train, or the following train (i.e., you would skip the upcoming one and wait for the train after).
+In each question, you will be shown two alternative boarding doors. Each door may belong to either the upcoming train, or the following train (i.e., you would skip the upcoming one and wait for the train after).
 Each option will include the following information:
 """)
 
     st.image(
         "screenshot_question.png",
-        caption="Example: The door is marked with a blue rectangle",
+        caption="Example: The door is marked with a yellow rectangle",
         use_container_width=True
     )
 
@@ -140,13 +140,22 @@ In reality, no train has arrived yet — you are choosing where to position your
 
 - **Trip duration** Your trip from origin to destination takes **{trip_duration} minutes**. This also remains unchanged. 
 
-- **Walking distance to door**: The distance from your current spot to the respective door. The selected door is marked with a **blue rectangle** in the image.
+- **Walking distance to door**: The distance from your current spot to the respective door. The selected door is marked with a **yellow rectangle** in the image.
 
 - **Offered discount**: A reduction from the regular ticket price if you board through this door. For example, a discount of 1 Euro means you would pay {ticket_price}-1 Euros.
 
 - **Time until train arrival**: This shows how long it will take until the train at this door arrives.
-If the label says just a number, e.g., “10”, it means the door belongs to the upcoming train (the one arriving next).
-If the label says “10 (next train)”, it means the door belongs to the train after the upcoming one — so you would skip the first train and board the following one.
+If the label says just a number, e.g., “10”, it means the door belongs to the upcoming train.
+If the label says “10 (following train)”, it means the door belongs to the train after the upcoming one — so you would skip the first train and board the following one.""")
+
+    st.image(
+            "Display_Description.png",
+            caption="Example: Upcoming and following train",
+            use_container_width=True
+    )
+    st.markdown(f"""
+
+
 
  
 ---
@@ -263,7 +272,7 @@ elif st.session_state.page == 'survey':
 
     Remember: The total travel time for your trip is **{trip_duration}** minutes. 
 
-    Remember: **Next train** indicates waiting for the next trip, not taking the current one. 
+    Remember: **Following train** indicates waiting for the next trip, not taking the current one. 
     """)
 
     
@@ -293,7 +302,7 @@ elif st.session_state.page == 'survey':
         discount_amount_1 = round(ticket_price * question['alt1_D'] / 100, 2)
         st.markdown(f"**Offered discount**: {question['alt1_D']} % (−{discount_amount_1} €)")
         if question['alt1_TS'] == 1:
-            arrival_time_1 = f"{question['alt1_T2DR'] + question['alt1_T2DS']} min (next train)"
+            arrival_time_1 = f"{question['alt1_T2DR'] + question['alt1_T2DS']} min (following train)"
         else:
             arrival_time_1 = f"{question['alt1_T2DR']} min"
 
@@ -308,7 +317,7 @@ elif st.session_state.page == 'survey':
         discount_amount_2 = round(ticket_price * question['alt2_D'] / 100, 2)
         st.markdown(f"**Offered discount**: {question['alt2_D']} % (−{discount_amount_2} €)")
         if question['alt2_TS'] == 1:
-            arrival_time_2 = f"{question['alt2_T2DR'] + question['alt2_T2DS']} min (next train)"
+            arrival_time_2 = f"{question['alt2_T2DR'] + question['alt2_T2DS']} min (following train)"
         else:
             arrival_time_2 = f"{question['alt2_T2DR']} min"
 
@@ -383,7 +392,11 @@ elif st.session_state.page == 'demographics':
     """)
 
     with st.form("demographics_form"):
-        age = st.number_input("What is your age?", min_value=18, max_value=100, step=1)
+        age = st.selectbox(
+            "What is your age group?",
+            ["Prefer not to say", "18–29", "30–39", "40–49", "50–59", "60–69", "70+"]
+        )
+
 
         gender = st.selectbox(
             "What is your gender?",
@@ -433,5 +446,26 @@ elif st.session_state.page == 'demographics':
         
         st.session_state.submitted_demo = True  # ✅ prevent further submissions
     
-        st.success("Thank you for participating in our study!")
-        st.stop()
+        st.session_state.page = 'end'
+        st.rerun()
+
+elif st.session_state.page == 'end':
+    st.title("Thank You for Your Participation!")
+
+    st.markdown("""
+    Your responses have been recorded successfully.
+
+    If you have any questions or would like to know more about this research, feel free to contact:
+
+    Laura Knappik
+    RWTH Aachen University  
+    knappik@analytics.rwth-aachen.de
+
+    ---
+
+    You may now close this tab or window.
+
+    """)
+
+        
+
