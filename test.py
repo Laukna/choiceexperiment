@@ -7,6 +7,7 @@ from google.oauth2.service_account import Credentials
 from PIL import Image, ImageDraw
 
 
+@st.cache_resource
 def get_gsheet():
     from google.oauth2.service_account import Credentials
     import gspread
@@ -23,6 +24,7 @@ def get_gsheet():
     gc = gspread.authorize(credentials)
     return gc.open_by_key(credentials_dict["gsheet_key"])
 
+
 # --- SETUP ---
 
 # Initialize session state variables
@@ -37,12 +39,21 @@ if 'demographic_data' not in st.session_state:
 
 
 # Load predefined choice sets
-design = pd.read_csv("Boarding_import.csv")
+@st.cache_data
+def load_design():
+    return pd.read_csv("Boarding_import.csv")
+
+design = load_design()
+
 
 # Get participant counter from Google Sheet
-sheet_meta = get_gsheet().worksheet("Meta")
-counter_cell = sheet_meta.acell("A1").value
-counter = int(counter_cell)
+if 'counter' not in st.session_state:
+    sheet_meta = get_gsheet().worksheet("Meta")
+    counter_cell = sheet_meta.acell("A1").value
+    st.session_state.counter = int(counter_cell)
+
+counter = st.session_state.counter
+
 
 
 # Assign both price and travel time (TT) based on participant counter
