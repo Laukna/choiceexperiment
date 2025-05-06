@@ -470,7 +470,9 @@ elif st.session_state.page == 'demographics':
         sheet_demo = get_gsheet().worksheet("Demographics")
         sheet_demo.append_rows(demographic_response.values.tolist(), value_input_option="USER_ENTERED")
     
+        sheet_meta = get_gsheet().worksheet("Meta")
         sheet_meta.update("A1", [[str(counter + 1)]])
+
         
         st.session_state.submitted_demo = True  # ✅ prevent further submissions
     
