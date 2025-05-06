@@ -126,7 +126,7 @@ Each option will include the following information:
     st.image(
         "screenshot_question.png",
         caption="Example: The door is marked with a yellow rectangle",
-        use_container_width=True
+        width=600
     )
 
     st.markdown(f"""
