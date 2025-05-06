@@ -385,7 +385,6 @@ elif st.session_state.page == 'survey':
 elif st.session_state.page == 'demographics':
     st.title("A Few More Questions")
     st.write("""
-    Thank you very much for your participation!
 
     To better understand the survey results, we would like to ask you a few additional questions.  
     Your answers are completely voluntary, anonymous, and will only be used for academic research purposes.
