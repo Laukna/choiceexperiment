@@ -286,7 +286,7 @@ elif st.session_state.page == 'survey':
 
     question = questions.iloc[idx]
 
-    st.markdown(f"### Choice Set {idx+1} of {total_questions}")
+    st.markdown(f"### Question {idx+1} of {total_questions}")
 
     # Create images
     image_A = compose_image(question['alt1_D2D'])
