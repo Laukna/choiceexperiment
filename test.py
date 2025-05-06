@@ -345,7 +345,7 @@ elif st.session_state.page == 'survey':
             else:
                 st.session_state.page = 'demographics'
         
-            st.rerun()
+                st.rerun()
 
 
 
