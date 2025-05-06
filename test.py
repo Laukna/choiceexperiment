@@ -87,10 +87,24 @@ def compose_image(D2D_value):
         door_y = int(700 - D2D_value * 2)
 
     draw = ImageDraw.Draw(base)
+    # Map D2D to line width
+    if D2D_value == 0:
+        line_width = 16
+    elif D2D_value == 10:
+        line_width = 12
+    elif D2D_value == 30:
+        line_width = 10
+    elif D2D_value == 70:
+        line_width = 8
+    else:
+        line_width = 8  # Default if unexpected D2D value
+    
     draw.rectangle(
         [(door_x, door_y), (door_x + door_size_x, door_y + door_size_y)],
-        outline="yellow", width=8
+        outline="yellow",
+        width=line_width
     )
+
     return base
 
 
