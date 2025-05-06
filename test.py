@@ -79,9 +79,13 @@ background_path = "Background.png"
 #door_marker_path = "door_marker.png"
 
 # --- HELPER FUNCTION ---
+@st.cache_resource
+def get_background():
+    return Image.open(background_path).convert("RGBA")
 
 def compose_image(D2D_value):
-    base = Image.open(background_path).convert("RGBA")
+    base = get_background().copy()  # Use a cached copy!
+
 #    door_marker = Image.open(door_marker_path).convert("RGBA")
     
     if D2D_value == 0:
