@@ -245,7 +245,6 @@ By continuing, you confirm that you have read and understood the information pro
     # --- Conditional start button ---
     if st.session_state.get("allow_start", False) and st.button("Start Survey"):
         st.session_state.page = 'survey'
-        st.session_state.current_idx = 0  # reset index
         st.rerun()
 
 
