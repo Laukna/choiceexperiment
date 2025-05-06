@@ -339,12 +339,14 @@ elif st.session_state.page == 'survey':
     
         if next_clicked:
             st.session_state.responses[idx] = st.session_state[f"temp_choice_{idx}"]
-    
+        
             if idx < total_questions - 1:
                 st.session_state.current_idx += 1
                 st.rerun()
-            st.session_state.page = 'demographics'
-            st.rerun()
+            else:
+                st.session_state.page = 'demographics'
+                st.rerun()
+
 
 
 
