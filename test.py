@@ -131,7 +131,7 @@ In reality, no train has arrived yet — you are choosing where to position your
 
 - **Walking distance to door**: The distance from your current spot to the respective door. The selected door is marked with a **yellow rectangle** in the image.
 
-- **Offered discount**: A reduction from the regular ticket price when boarding through this door. For example, your regular ticket fare is {ticket_price} Euro and a discount of 1 Euro is applied, the final price you pay is {ticket_price - 1} Euros.
+- **Offered discount**: A reduction from the regular ticket price when boarding through this door. For example, your regular ticket fare is {ticket_price} Euro and a discount of 1 Euro is applied, the final price you pay is {ticket_price - 1:.2f} Euros.
 
 - **Time until train arrival**: This shows how long it will take until the train at this door arrives.
 If the label says just a number, e.g., “10”, it means the door belongs to the upcoming train.
@@ -290,7 +290,7 @@ elif st.session_state.page == 'survey':
         st.image(image_A, caption="Option A", use_container_width=True)
         st.markdown(f"**Walking distance to door**: {question['alt1_D2D']} m")
         discount_amount_1 = round(ticket_price * question['alt1_D'] / 100, 2)
-        st.markdown(f"**Offered discount**: {question['alt1_D']} % (−{discount_amount_1} €)")
+        st.markdown(f"**Offered discount**:  You pay {ticket_price * (1 - question['alt1_D']/100):.2f} Euros ({question['alt1_D']}% discount)"
         if question['alt1_TS'] == 1:
             arrival_time_1 = f"{question['alt1_T2DR'] + question['alt1_T2DS']} min (following train)"
         else:
@@ -305,7 +305,7 @@ elif st.session_state.page == 'survey':
         st.image(image_B, caption="Option B", use_container_width=True)
         st.markdown(f"**Walking distance to door**: {question['alt2_D2D']} m")
         discount_amount_2 = round(ticket_price * question['alt2_D'] / 100, 2)
-        st.markdown(f"**Offered discount**: You pay: {ticket_price * (1 - question['alt2_D']/100)} ({question['alt2_D']}% discount)")
+        st.markdown(f"**Offered discount**: You pay {ticket_price * (1 - question['alt2_D']/100):.2f} Euros ({question['alt2_D']}% discount)"
         if question['alt2_TS'] == 1:
             arrival_time_2 = f"{question['alt2_T2DR'] + question['alt2_T2DS']} min (following train)"
         else:
