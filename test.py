@@ -113,7 +113,7 @@ Each option will include the following information:
 """)
 
     st.image(
-        "screenshot_question.png",
+        "screenshot_questions.png",
         caption="Example: The door is marked with a yellow rectangle",
         use_container_width=True
     )
