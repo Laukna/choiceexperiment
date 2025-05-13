@@ -4,7 +4,7 @@ import os
 # Path to your local background image
 background_path = "choicedesign/Background.png"
 # Folder to save images
-output_folder = "choicedesign/Backgroung_Fixed"
+output_folder = "choicedesign/door_images"
 os.makedirs(output_folder, exist_ok=True)
 
 def compose_image(D2D_value):
