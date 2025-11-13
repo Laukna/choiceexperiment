@@ -514,18 +514,34 @@ elif st.session_state.page == 'survey':
                         'participant_number': counter,
                         'ticket_price': st.session_state.ticket_price,
                         'trip_duration': st.session_state.trip_duration,
+                        'previous_transfers' = st.session_state.previous_transfers
+                        'time_recent' = st.session_state.time_recent
+                        'time_subseq' = st.session_state.time_subseq
+                        'travel_mode' = st.session_state.travel_mode
                         'choice_set': i + 1,
                         'choice': st.session_state.responses[i],
-                        'alt1_D': questions.iloc[i]['alt1_D'],
+                        'alt1_D2E': questions.iloc[i]['alt1_D2E'],
                         'alt1_D2D': questions.iloc[i]['alt1_D2D'],
-                        'alt1_TS': questions.iloc[i]['alt1_TS'],
-                        'alt1_T2DR': questions.iloc[i]['alt1_T2DR'],
-                        'alt1_T2DS': questions.iloc[i]['alt1_T2DS'],
-                        'alt2_D': questions.iloc[i]['alt2_D'],
+                        'alt1_O': questions.iloc[i]['alt1_O'],
+                        'alt1_CD': questions.iloc[i]['alt1_CD'],
+                        'alt1_CP': questions.iloc[i]['alt1_CP'],
+                        'alt1_CrowdingRed': questions.iloc[i]['alt1_CrowdingRed'],
+                        'alt1_CrowdingGreen': questions.iloc[i]['alt1_CrowdingGreen'],
+                        'alt1_CIL': questions.iloc[i]['alt1_CIL'],
+                        'alt1_CID': questions.iloc[i]['alt1_CID'],
+                        'alt1_D': questions.iloc[i]['alt1_D'],
+                        'alt1_RC': questions.iloc[i]['alt1_RC'],       
+                        'alt2_D2E': questions.iloc[i]['alt2_D2E'],
                         'alt2_D2D': questions.iloc[i]['alt2_D2D'],
-                        'alt2_TS': questions.iloc[i]['alt2_TS'],
-                        'alt2_T2DR': questions.iloc[i]['alt2_T2DR'],
-                        'alt2_T2DS': questions.iloc[i]['alt2_T2DS']
+                        'alt2_O': questions.iloc[i]['alt2_O'],
+                        'alt2_CD': questions.iloc[i]['alt2_CD'],
+                        'alt2_CP': questions.iloc[i]['alt2_CP'],
+                        'alt2_CrowdingRed': questions.iloc[i]['alt2_CrowdingRed'],
+                        'alt2_CrowdingGreen': questions.iloc[i]['alt2_CrowdingGreen'],
+                        'alt2_CIL': questions.iloc[i]['alt2_CIL'],
+                        'alt2_CID': questions.iloc[i]['alt2_CID'],
+                        'alt2_D': questions.iloc[i]['alt2_D'],
+                        'alt2_RC': questions.iloc[i]['alt2_RC']
                     }
                     for i in range(total_questions)
                 ])
