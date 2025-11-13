@@ -419,11 +419,7 @@ elif st.session_state.page == 'survey':
 
         discount_amount_1 = round(ticket_price * question['alt1_D'] / 100, 2)
         st.markdown(f"**Offered discount**:  You pay {ticket_price * (1 - question['alt1_D']/100):.2f} Euros ({question['alt1_D']}% discount)")
-        if question['alt1_TS'] == 1:
-            arrival_time_1 = f"{question['alt1_T2DR'] + question['alt1_T2DS']} min (following train)"
-        else:
-            arrival_time_1 = f"{question['alt1_T2DR']} min"
-
+    
         
 
 
@@ -431,18 +427,56 @@ elif st.session_state.page == 'survey':
     with col2:
         st.subheader("Door B")
         st.image(img_path_B, caption="Option B", use_container_width=True)
+        st.markdown(f"**Walking distance to exit**: {question['alt2_D2E']} m")
         st.markdown(f"**Walking distance to door**: {question['alt2_D2D']} m")
-        discount_amount_2 = round(ticket_price * question['alt2_D'] / 100, 2)
-        st.markdown(f"**Offered discount**: You pay {ticket_price * (1 - question['alt2_D']/100):.2f} Euros ({question['alt2_D']}% discount)")
-        if question['alt2_TS'] == 1:
-            arrival_time_2 = f"{question['alt2_T2DR'] + question['alt2_T2DS']} min (following train)"
+        st.markdown(f"**Obstacle**: {'Yes' if question['alt2_O'] == 1 else 'No'}")
+        st.markdown(f"**Crowding level at door**: {question['alt2_CD']} persons")
+        st.markdown(f"**Crowding level at platform**: {question['alt2_CP']} persons per m^2")
+        # Bestimme die Beschreibung der "In-vehicle crowding"-Anzeige
+        if question['alt2_CrowdingRed'] == 1 and question['alt2_CIL'] == 1:
+            crowding_text = "Red (LED stripe)"
+        elif question['alt2_CrowdingRed'] == 1 and question['alt2_CID'] == 1:
+            crowding_text = "Red (Display)"
+        elif question['alt2_CrowdingGreen'] == 1 and question['alt2_CIL'] == 1:
+            crowding_text = "Green (LED stripe)"
+        elif question['alt2_CrowdingGreen'] == 1 and question['alt2_CID'] == 1:
+            crowding_text = "Green (Display)"
+        elif (
+            question['alt2_CrowdingGreen'] == 0
+            and question['alt2_CrowdingRed'] == 0
+            and question['alt2_CIL'] == 1
+        ):
+            crowding_text = "Yellow (LED stripe)"
+        elif (
+            question['alt2_CrowdingGreen'] == 0
+            and question['alt2_CrowdingRed'] == 0
+            and question['alt2_CID'] == 1
+        ):
+            crowding_text = "Yellow (Display)"
         else:
-            arrival_time_2 = f"{question['alt2_T2DR']} min"
+            crowding_text = "No information"  # Fallback, falls keine Bedingung zutrifft
 
-        st.markdown(f"**Time until train arrival**: {arrival_time_2}")
-    
+        
+        st.markdown(f"**In-vehicle crowding**: {crowding_text}")
+        time_recent = st.session_state.get("time_recent")
+        time_subseq = st.session_state.get("time_subseq")
 
+        # Optional: als ganze Minuten formatieren, falls als float übergeben
+        def fmt_minutes(x):
+            return None if x is None else f"{int(round(x))} m"
 
+        # Bedingung aus den Daten
+        rc_flag = question['alt2_RC']  # 1 = nächster Zug, 0 = Folgezug
+
+        if rc_flag == 1:
+            time_text = f"{time_recent}"
+        else:
+            time_text = f"{time_subseq} (following train)"
+
+        st.markdown(f"**Time until train arrival**: {time_text}")
+
+        discount_amount_1 = round(ticket_price * question['alt2_D'] / 100, 2)
+        st.markdown(f"**Offered discount**:  You pay {ticket_price * (1 - question['alt2_D']/100):.2f} Euros ({question['alt2_D']}% discount)")
 
     # Get participant's choice
     with st.form(key=f"form_{idx}"):
@@ -563,7 +597,7 @@ elif st.session_state.page == 'demographics':
         sheet_meta.update("A1", [[str(counter + 1)]])
 
         
-        st.session_state.submitted_demo = True  # ✅ prevent further submissions
+        st.session_state.submitted_demo = True  # prevent further submissions
     
         st.session_state.page = 'end'
         st.rerun()
