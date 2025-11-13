@@ -41,7 +41,7 @@ if 'demographic_data' not in st.session_state:
 # Load predefined choice sets
 @st.cache_data
 def load_design():
-    return pd.read_csv("Boarding_import.csv")
+    return pd.read_csv("choice_sets_large.csv")
 
 design = load_design()
 
@@ -60,11 +60,11 @@ if 'cs_group' not in st.session_state:
 
 cs_group = st.session_state.cs_group
 
-# Check Boarding.csv -> column called set_id?
+# Check Boarding.csv -> column called CS?
 if cs_group == 'A':
-    design = design[design['set_id'].between(1, 12)].copy()
+    design = design[design['CS'].between(1, 12)].copy()
 else:
-    design = design[design['set_id'].between(13, 24)].copy()
+    design = design[design['CS'].between(13, 24)].copy()
 
 # Assign trip attributes based on participant counter
 @st.cache_data
