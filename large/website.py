@@ -38,10 +38,11 @@ if 'demographic_data' not in st.session_state:
     st.session_state.demographic_data = {}
 
 
-# Load predefined choice sets
 @st.cache_data
 def load_design():
-    return pd.read_csv("choice_sets_large.csv")
+    base_dir = os.path.dirname(__file__)
+    csv_path = os.path.join(base_dir, "choice_sets_large.csv")
+    return pd.read_csv(csv_path)
 
 design = load_design()
 
@@ -175,7 +176,7 @@ Each option will include the following information:
 """)
 
     st.image(
-        "Figures/Folie1.png", #update figure!!!
+        "large/Figures/Folie1.png", #update figure!!!
         caption="Example: The door is marked with a yellow rectangle",
         use_container_width=True
     )
@@ -198,7 +199,7 @@ In reality, no train has arrived yet — you are choosing where to position your
     """)
 
     st.image(
-            "Display_Description.png",
+            "large/Display_Description.png",
             caption="Example: Upcoming and following train",
             use_container_width=True
     )
@@ -359,8 +360,8 @@ elif st.session_state.page == 'survey':
     img_num_A = idx * 2 + 1
     img_num_B = idx * 2 + 2
 
-    img_path_A = f"Figure/Folie{img_num_A}.png"
-    img_path_B = f"Figure/Folie{img_num_B}.png"
+    img_path_A = f"large/Figures/Folie{img_num_A}.png"
+    img_path_B = f"large/Figures/Folie{img_num_B}.png"
 
 
 
