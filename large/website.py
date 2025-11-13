@@ -6,6 +6,9 @@ import gspread
 from google.oauth2.service_account import Credentials
 from PIL import Image, ImageDraw
 
+# Base directory for relative assets (folder containing this script)
+BASE_DIR = os.path.dirname(__file__)
+
 
 @st.cache_resource
 def get_gsheet():
@@ -40,8 +43,7 @@ if 'demographic_data' not in st.session_state:
 
 @st.cache_data
 def load_design():
-    base_dir = os.path.dirname(__file__)
-    csv_path = os.path.join(base_dir, "choice_sets_large.csv")
+    csv_path = os.path.join(BASE_DIR, "choice_sets_large.csv")
     return pd.read_csv(csv_path)
 
 design = load_design()
@@ -146,10 +148,7 @@ else:
 #     path = f"door_images/door_d2d_{D2D_value}.png"
 #     return Image.open(path)
 
-# # --- START PAGE ---
-
-
-
+# --- START PAGE ---
 
 if st.session_state.page == 'start':
     st.title("Welcome to the Train Door Choice Experiment")
@@ -171,12 +170,14 @@ Imagine you are standing on a subway platform, about to decide where to wait for
 You haven’t positioned yourself yet and must now choose a spot on the platform.
 You are traveling alone with a small backpack on your shoulders. 
 
-In each question, you will be shown two alternative boarding doors. Each door may belong to either the upcoming train, or the following train (i.e., you would skip the upcoming one and wait for the train after).
+In each question, you will be shown two alternative boarding doors. Each door may belong to either the upcoming train, or the following train (i.e., you would skip the upcoming one and wait for the tr[...]
 Each option will include the following information:
 """)
 
+    # Example figure: use relative path
+    example_fig_path = os.path.join(BASE_DIR, "Figures", "Folie1.png")
     st.image(
-        "large/Figures/Folie1.png", #update figure!!!
+        example_fig_path,
         caption="Example: The door is marked with a yellow rectangle",
         use_container_width=True
     )
@@ -193,13 +194,14 @@ In reality, no train has arrived yet — you are choosing where to position your
 - **Obstacle**: This indicates whether there are obstacles (e.g., luggage) in your way when walking to this door.
 - **Crowding level at door**: How many passengers are currently waiting at this door.
 - **Crowding level at platform**: Crowdedness at the platform on your way to this door.
-- **In-vehicle crowding**: This indicates how crowded the train is expected to be when boarding through this door. It is shown in three levels: green (low), yellow (medium), red (high). The information might be shown on the platform display or as LED light indicators on the ground. 
-- **Time until train arrival**: This shows how long it will take until the train at this door arrives. Some doors belong to the current train arriving soon, while others belong to the following train (i.e., you would skip the current one and wait longer). This is indicated by the text "(following train)".
-- **Offered discount**: A reduction from the regular ticket price when boarding through this door. For example, your regular ticket fare is {ticket_price} Euro and a discount of 1 Euro is applied, the final price you pay is {ticket_price - 1:.2f} Euros.
+- **In-vehicle crowding**: This indicates how crowded the train is expected to be when boarding through this door. It is shown in three levels: green (low), yellow (medium), red (high). The informatio[...]
+- **Time until train arrival**: This shows how long it will take until the train at this door arrives. Some doors belong to the current train arriving soon, while others belong to the following train [...]
+- **Offered discount**: A reduction from the regular ticket price when boarding through this door. For example, your regular ticket fare is {ticket_price} Euro and a discount of 1 Euro is applied, the[...]
     """)
 
+    display_desc_path = os.path.join(BASE_DIR, "Display_Description.png")
     st.image(
-            "large/Display_Description.png",
+            display_desc_path,
             caption="Example: Upcoming and following train",
             use_container_width=True
     )
@@ -229,7 +231,7 @@ There are no right or wrong answers — we are interested in your personal prefe
 
 **Demographic Information:**
 
-At the end of the survey, we will ask a few optional questions about your background (e.g., age group, gender, travel frequency). These help us better interpret the results and remain completely anonymous.
+At the end of the survey, we will ask a few optional questions about your background (e.g., age group, gender, travel frequency). These help us better interpret the results and remain completely anony[...]
 
 **Data Protection and Confidentiality:**
 
@@ -360,8 +362,8 @@ elif st.session_state.page == 'survey':
     img_num_A = idx * 2 + 1
     img_num_B = idx * 2 + 2
 
-    img_path_A = f"large/Figures/Folie{img_num_A}.png"
-    img_path_B = f"large/Figures/Folie{img_num_B}.png"
+    img_path_A = os.path.join(BASE_DIR, "Figures", f"Folie{img_num_A}.png")
+    img_path_B = os.path.join(BASE_DIR, "Figures", f"Folie{img_num_B}.png")
 
 
 
@@ -620,5 +622,3 @@ elif st.session_state.page == 'end':
     You may now close this tab or window.
 
     """)
-
-        
