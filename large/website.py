@@ -514,10 +514,10 @@ elif st.session_state.page == 'survey':
                         'participant_number': counter,
                         'ticket_price': st.session_state.ticket_price,
                         'trip_duration': st.session_state.trip_duration,
-                        'previous_transfers' = st.session_state.previous_transfers
-                        'time_recent' = st.session_state.time_recent
-                        'time_subseq' = st.session_state.time_subseq
-                        'travel_mode' = st.session_state.travel_mode
+                        'previous_transfers' : st.session_state.previous_transfers
+                        'time_recent' : st.session_state.time_recent
+                        'time_subseq' : st.session_state.time_subseq
+                        'travel_mode' : st.session_state.travel_mode
                         'choice_set': i + 1,
                         'choice': st.session_state.responses[i],
                         'alt1_D2E': questions.iloc[i]['alt1_D2E'],
