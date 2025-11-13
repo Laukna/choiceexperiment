@@ -195,13 +195,14 @@ In reality, no train has arrived yet — you are choosing where to position your
 - **In-vehicle crowding**: This indicates how crowded the train is expected to be when boarding through this door. It is shown in three levels: green (low), yellow (medium), red (high). The information might be shown on the platform display or as LED light indicators on the ground. 
 - **Time until train arrival**: This shows how long it will take until the train at this door arrives. Some doors belong to the current train arriving soon, while others belong to the following train (i.e., you would skip the current one and wait longer). This is indicated by the text "(following train)".
 - **Offered discount**: A reduction from the regular ticket price when boarding through this door. For example, your regular ticket fare is {ticket_price} Euro and a discount of 1 Euro is applied, the final price you pay is {ticket_price - 1:.2f} Euros.
+    """)
 
     st.image(
             "Display_Description.png",
             caption="Example: Upcoming and following train",
             use_container_width=True
     )
-    st.markdown(f""
+    st.markdown(f"""
 
 ---
 
