@@ -463,15 +463,15 @@ elif st.session_state.page == 'survey':
         st.markdown(f"**Crowding level at door**: {question['alt2_CD']} persons")
         st.markdown(f"**Crowding level at platform**: {question['alt2_CP']} person(s) per m²")
         # Bestimme die Beschreibung der "In-vehicle crowding"-Anzeige
-        if question['alt2_CrowdingRed'] == 1 and question['alt2_CIL'] == 1:
+        if question['alt2_CrowdingRed'] == 1 and question['alt2_CIL'] == 1 and question['alt2_CID'] == 0:
             crowding_text = "Red (LED stripe)"
-        elif question['alt2_CrowdingRed'] == 1 and question['alt2_CID'] == 1:
+        elif question['alt2_CrowdingRed'] == 1 and question['alt2_CID'] == 1 and question['alt2_CIL'] == 0:
             crowding_text = "Red (Display)"
         elif question ['alt2_CrowdingRed'] == 1 and question['alt2_CID'] == 1 and question['alt2_CIL'] == 1:
             crowding_text = "Red (Display & LED stripe)"
-        elif question['alt2_CrowdingGreen'] == 1 and question['alt2_CIL'] == 1:
+        elif question['alt2_CrowdingGreen'] == 1 and question['alt2_CIL'] == 1 and question['alt2_CID'] == 0:
             crowding_text = "Green (LED stripe)"
-        elif question['alt2_CrowdingGreen'] == 1 and question['alt2_CID'] == 1:
+        elif question['alt2_CrowdingGreen'] == 1 and question['alt2_CID'] == 1 and question['alt2_CIL'] == 0:
             crowding_text = "Green (Display)"
         elif question ['alt2_CrowdingGreen'] == 1 and question['alt2_CID'] == 1 and question['alt2_CIL'] == 1:
             crowding_text = "Green (Display & LED stripe)"
@@ -479,12 +479,14 @@ elif st.session_state.page == 'survey':
             question['alt2_CrowdingGreen'] == 0
             and question['alt2_CrowdingRed'] == 0
             and question['alt2_CIL'] == 1
+            and question['alt2_CID'] == 0
         ):
             crowding_text = "Yellow (LED stripe)"
         elif (
             question['alt2_CrowdingGreen'] == 0
             and question['alt2_CrowdingRed'] == 0
             and question['alt2_CID'] == 1
+            and question['alt2_CIL'] == 0
         ):
             crowding_text = "Yellow (Display)"
 
