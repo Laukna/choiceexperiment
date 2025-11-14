@@ -168,9 +168,8 @@ This survey is part of a research project investigating how travelers make decis
 
 Imagine you are standing on a subway platform, about to decide where to wait for an arriving train.
 You haven’t positioned yourself yet and must now choose a spot on the platform.
-You are traveling alone with a small backpack on your shoulders. 
 
-In each question, you will be shown two alternative boarding doors. Each door may belong to either the upcoming train, or the following train (i.e., you would skip the upcoming one and wait for the tr[...]
+In each question, you will be shown two alternative boarding doors. Each door may belong to either the upcoming train, or the following train (i.e., you would skip the upcoming one and wait for the train after).
 Each option will include the following information:
 """)
 
@@ -179,7 +178,7 @@ Each option will include the following information:
     st.image(
         example_fig_path,
         caption="Example: The door is marked with a yellow rectangle",
-        use_container_width=True
+        width=True
     )
 
     st.markdown(f"""
@@ -194,17 +193,32 @@ In reality, no train has arrived yet — you are choosing where to position your
 - **Obstacle**: This indicates whether there are obstacles (e.g., luggage) in your way when walking to this door.
 - **Crowding level at door**: How many passengers are currently waiting at this door.
 - **Crowding level at platform**: Crowdedness at the platform on your way to this door.
-- **In-vehicle crowding**: This indicates how crowded the train is expected to be when boarding through this door. It is shown in three levels: green (low), yellow (medium), red (high). The informatio[...]
-- **Time until train arrival**: This shows how long it will take until the train at this door arrives. Some doors belong to the current train arriving soon, while others belong to the following train [...]
-- **Offered discount**: A reduction from the regular ticket price when boarding through this door. For example, your regular ticket fare is {ticket_price} Euro and a discount of 1 Euro is applied, the[...]
+- **In-vehicle crowding**: This indicates how crowded the train is expected to be when boarding through this door. It is shown in three levels: green (low), yellow (medium), red (high). The information might be shown on the platform display or as LED light indicators on the ground. 
+- **Time until train arrival**: This shows how long it will take until the train at this door arrives. Some doors belong to the current train arriving soon, while others belong to the following train (i.e., you would skip the current one and wait longer). This is indicated by the text "(following train)".
+- **Offered discount**: A reduction from the regular ticket price when boarding through this door. For example, your regular ticket fare is {ticket_price} Euro and a discount of 1 Euro is applied, the final price you pay is {ticket_price - 1:.2f} Euros.
     """)
 
     display_desc_path = os.path.join(BASE_DIR, "Display_Description.png")
     st.image(
             display_desc_path,
             caption="Example: Upcoming and following train",
-            use_container_width=True
+            width=True
     )
+
+    LED_desc_path = os.path.join(BASE_DIR, "LED_example.png")
+    st.image(
+            LED_desc_path,
+            caption="Example: LED stripes showing in-vehicle crowdedness",
+            width=True
+    )
+
+    Crowding_desc_path = os.path.join(BASE_DIR, "Crowding_example.png")
+    st.image(
+            Crowding_desc_path,
+            caption="Example: Display showing in-vehicle crowdedness",
+            width=True
+    )
+    
     st.markdown(f"""
 
 ---
@@ -231,7 +245,7 @@ There are no right or wrong answers — we are interested in your personal prefe
 
 **Demographic Information:**
 
-At the end of the survey, we will ask a few optional questions about your background (e.g., age group, gender, travel frequency). These help us better interpret the results and remain completely anony[...]
+At the end of the survey, we will ask a few optional questions about your background (e.g., age group, gender, travel frequency). These help us better interpret the results and remain completely anonymous.
 
 **Data Protection and Confidentiality:**
 
@@ -371,7 +385,7 @@ elif st.session_state.page == 'survey':
 
     with col1:
         st.subheader("Door A")
-        st.image(img_path_A, caption="Option A", use_container_width=True)
+        st.image(img_path_A, caption="Option A", width=True)
         st.markdown(f"**Walking distance to exit**: {question['alt1_D2E']} m")
         st.markdown(f"**Walking distance to door**: {question['alt1_D2D']} m")
         st.markdown(f"**Obstacle**: {'Yes' if question['alt1_O'] == 1 else 'No'}")
@@ -429,7 +443,7 @@ elif st.session_state.page == 'survey':
 
     with col2:
         st.subheader("Door B")
-        st.image(img_path_B, caption="Option B", use_container_width=True)
+        st.image(img_path_B, caption="Option B", width=True)
         st.markdown(f"**Walking distance to exit**: {question['alt2_D2E']} m")
         st.markdown(f"**Walking distance to door**: {question['alt2_D2D']} m")
         st.markdown(f"**Obstacle**: {'Yes' if question['alt2_O'] == 1 else 'No'}")
