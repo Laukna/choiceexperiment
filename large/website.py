@@ -443,7 +443,7 @@ elif st.session_state.page == 'survey':
         if rc_flag == 1:
             time_text = f"{time_recent} minute(s)"
         else:
-            time_text = f"{time_subseq} (following train) minutes"
+            time_text = f"{time_subseq} minutes (following train)"
 
         st.markdown(f"**Time until train arrival**: {time_text}")
 
