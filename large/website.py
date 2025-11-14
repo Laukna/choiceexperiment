@@ -511,9 +511,9 @@ elif st.session_state.page == 'survey':
         rc_flag = question['alt2_RC']  # 1 = nächster Zug, 0 = Folgezug
 
         if rc_flag == 1:
-            time_text = f"{time_recent}"
+            time_text = f"{time_recent} minute(s)"
         else:
-            time_text = f"{time_subseq} (following train)"
+            time_text = f"{time_subseq} minutes (following train)"
 
         st.markdown(f"**Time until train arrival**: {time_text}")
 
