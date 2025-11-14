@@ -65,9 +65,9 @@ cs_group = st.session_state.cs_group
 
 # Check Boarding.csv -> column called CS?
 if cs_group == 'A':
-    design = design[design['CS'].between(1, 12)].copy()
+    design = design[design['CS'].between(1, 12)].sort_values("CS").copy()
 else:
-    design = design[design['CS'].between(13, 24)].copy()
+    design = design[design['CS'].between(13, 24)]..sort_values("CS").copy()
 
 # Assign trip attributes based on participant counter
 @st.cache_data
@@ -372,12 +372,15 @@ elif st.session_state.page == 'survey':
 
     st.markdown(f"### Question {idx+1} of {total_questions}: Which door do you choose?")
 
-    # Create images
-    img_num_A = idx * 2 + 1
-    img_num_B = idx * 2 + 2
+    #create images
 
+    cs_value = int(question["CS"])            # z.B. 1, 2, ..., 24
+    img_num_A = (cs_value - 1) * 2 + 1        # CS=1 -> 1, CS=12 -> 23, CS=13 -> 25
+    img_num_B = (cs_value - 1) * 2 + 2        # CS=1 -> 2, CS=12 -> 24, CS=13 -> 26
+    
     img_path_A = os.path.join(BASE_DIR, "Figures", f"Folie{img_num_A}.png")
     img_path_B = os.path.join(BASE_DIR, "Figures", f"Folie{img_num_B}.png")
+
 
 
 
