@@ -67,7 +67,7 @@ cs_group = st.session_state.cs_group
 if cs_group == 'A':
     design = design[design['CS'].between(1, 12)].sort_values("CS").copy()
 else:
-    design = design[design['CS'].between(13, 24)]..sort_values("CS").copy()
+    design = design[design['CS'].between(13, 24)].sort_values("CS").copy()
 
 # Assign trip attributes based on participant counter
 @st.cache_data
