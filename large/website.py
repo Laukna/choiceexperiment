@@ -390,7 +390,7 @@ elif st.session_state.page == 'survey':
         st.markdown(f"**Walking distance to door**: {question['alt1_D2D']} m")
         st.markdown(f"**Obstacle**: {'Yes' if question['alt1_O'] == 1 else 'No'}")
         st.markdown(f"**Crowding level at door**: {question['alt1_CD']} persons")
-        st.markdown(f"**Crowding level at platform**: {question['alt1_CP']} persons per m^2")
+        st.markdown(f"**Crowding level at platform**: {question['alt1_CP']} persons per m²")
         # Bestimme die Beschreibung der "In-vehicle crowding"-Anzeige
         if question['alt1_CrowdingRed'] == 1 and question['alt1_CIL'] == 1:
             crowding_text = "Red (LED stripe)"
@@ -428,9 +428,9 @@ elif st.session_state.page == 'survey':
         rc_flag = question['alt1_RC']  # 1 = nächster Zug, 0 = Folgezug
 
         if rc_flag == 1:
-            time_text = f"{time_recent}"
+            time_text = f"{time_recent} minute(s)"
         else:
-            time_text = f"{time_subseq} (following train)"
+            time_text = f"{time_subseq} (following train) minutes"
 
         st.markdown(f"**Time until train arrival**: {time_text}")
 
@@ -448,16 +448,20 @@ elif st.session_state.page == 'survey':
         st.markdown(f"**Walking distance to door**: {question['alt2_D2D']} m")
         st.markdown(f"**Obstacle**: {'Yes' if question['alt2_O'] == 1 else 'No'}")
         st.markdown(f"**Crowding level at door**: {question['alt2_CD']} persons")
-        st.markdown(f"**Crowding level at platform**: {question['alt2_CP']} persons per m^2")
+        st.markdown(f"**Crowding level at platform**: {question['alt2_CP']} persons per m²")
         # Bestimme die Beschreibung der "In-vehicle crowding"-Anzeige
         if question['alt2_CrowdingRed'] == 1 and question['alt2_CIL'] == 1:
             crowding_text = "Red (LED stripe)"
         elif question['alt2_CrowdingRed'] == 1 and question['alt2_CID'] == 1:
             crowding_text = "Red (Display)"
+        elif question ['alt2_CrowdingRed'] == 1 and question['alt2_CID'] == 1 and question['alt2_CIL'] == 1:
+            crowding_text = "Red (Display & LED stripe)"
         elif question['alt2_CrowdingGreen'] == 1 and question['alt2_CIL'] == 1:
             crowding_text = "Green (LED stripe)"
         elif question['alt2_CrowdingGreen'] == 1 and question['alt2_CID'] == 1:
             crowding_text = "Green (Display)"
+        elif question ['alt2_CrowdingGreen'] == 1 and question['alt2_CID'] == 1 and question['alt2_CIL'] == 1:
+            crowding_text = "Green (Display & LED stripe)"
         elif (
             question['alt2_CrowdingGreen'] == 0
             and question['alt2_CrowdingRed'] == 0
@@ -470,6 +474,14 @@ elif st.session_state.page == 'survey':
             and question['alt2_CID'] == 1
         ):
             crowding_text = "Yellow (Display)"
+
+        elif (
+            question['alt2_CrowdingGreen'] == 0
+            and question['alt2_CrowdingRed'] == 0
+            and question['alt2_CID'] == 1
+            and question['alt2_CIL'] == 1
+        ):
+            crowding_text = "Yellow (Display & LED stripe)"
         else:
             crowding_text = "No information"  # Fallback, falls keine Bedingung zutrifft
 
