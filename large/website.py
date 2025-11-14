@@ -178,7 +178,7 @@ Each option will include the following information:
     st.image(
         example_fig_path,
         caption="Example: The door is marked with a yellow rectangle",
-        width=True
+        width=None
     )
 
     st.markdown(f"""
@@ -202,21 +202,21 @@ In reality, no train has arrived yet — you are choosing where to position your
     st.image(
             display_desc_path,
             caption="Example: Upcoming and following train",
-            width=True
+            width=None
     )
 
     LED_desc_path = os.path.join(BASE_DIR, "LED_example.jpg")
     st.image(
             LED_desc_path,
             caption="Example: LED stripes showing in-vehicle crowdedness",
-            width=True
+            width=None
     )
 
     Crowding_desc_path = os.path.join(BASE_DIR, "Crowding_example.avif")
     st.image(
             Crowding_desc_path,
             caption="Example: Display showing in-vehicle crowdedness",
-            width=True
+            width=None
     )
     
     st.markdown(f"""
@@ -385,7 +385,7 @@ elif st.session_state.page == 'survey':
 
     with col1:
         st.subheader("Door A")
-        st.image(img_path_A, caption="Option A", width=True)
+        st.image(img_path_A, caption="Option A", width=None)
         st.markdown(f"**Walking distance to exit**: {question['alt1_D2E']} m")
         st.markdown(f"**Walking distance to door**: {question['alt1_D2D']} m")
         st.markdown(f"**Obstacle**: {'Yes' if question['alt1_O'] == 1 else 'No'}")
@@ -443,7 +443,7 @@ elif st.session_state.page == 'survey':
 
     with col2:
         st.subheader("Door B")
-        st.image(img_path_B, caption="Option B", width=True)
+        st.image(img_path_B, caption="Option B", width=None)
         st.markdown(f"**Walking distance to exit**: {question['alt2_D2E']} m")
         st.markdown(f"**Walking distance to door**: {question['alt2_D2D']} m")
         st.markdown(f"**Obstacle**: {'Yes' if question['alt2_O'] == 1 else 'No'}")
