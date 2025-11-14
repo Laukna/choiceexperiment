@@ -390,7 +390,7 @@ elif st.session_state.page == 'survey':
         st.markdown(f"**Walking distance to door**: {question['alt1_D2D']} m")
         st.markdown(f"**Obstacle**: {'Yes' if question['alt1_O'] == 1 else 'No'}")
         st.markdown(f"**Crowding level at door**: {question['alt1_CD']} persons")
-        st.markdown(f"**Crowding level at platform**: {question['alt1_CP']} persons per m²")
+        st.markdown(f"**Crowding level at platform**: {question['alt1_CP']} person(s) per m²")
         # Bestimme die Beschreibung der "In-vehicle crowding"-Anzeige
         if question['alt1_CrowdingRed'] == 1 and question['alt1_CIL'] == 1 and question['alt1_CID'] != 1:
             crowding_text = "Red (LED stripe)"
@@ -461,7 +461,7 @@ elif st.session_state.page == 'survey':
         st.markdown(f"**Walking distance to door**: {question['alt2_D2D']} m")
         st.markdown(f"**Obstacle**: {'Yes' if question['alt2_O'] == 1 else 'No'}")
         st.markdown(f"**Crowding level at door**: {question['alt2_CD']} persons")
-        st.markdown(f"**Crowding level at platform**: {question['alt2_CP']} persons per m²")
+        st.markdown(f"**Crowding level at platform**: {question['alt2_CP']} person(s) per m²")
         # Bestimme die Beschreibung der "In-vehicle crowding"-Anzeige
         if question['alt2_CrowdingRed'] == 1 and question['alt2_CIL'] == 1:
             crowding_text = "Red (LED stripe)"
@@ -603,7 +603,7 @@ elif st.session_state.page == 'demographics':
     with st.form("demographics_form"):
         age = st.selectbox(
             "What is your age group?",
-            ["Prefer not to say", "18–29", "30–39", "40–49", "50–59", "60–69", "70+"]
+            ["Prefer not to say", "18–25","26-30", "31–35","36-40", "41-45","46-50","51–55", "56-60", "61–65","66-70", "71+"]
         )
 
 
@@ -613,13 +613,13 @@ elif st.session_state.page == 'demographics':
         )
 
         travel_freq = st.selectbox(
-            "How often have you approximately traveled by train in the last 12 months?",
-            ["Prefer not to say", "None", "Daily", "Weekly", "Monthly", "Yearly"]
+            "How often have you approximately traveled by **train** in the last 12 months?",
+            ["Prefer not to say", "Never", "1x per day", "1x per week", "1x per month", "1x per year"]
         )
 
         travel_freq_1 = st.selectbox(
             "How often have you approximately traveled by ***subway*** in the last 12 months?",
-            ["Prefer not to say", "None", "Daily", "Weekly", "Monthly", "Yearly"]
+            ["Prefer not to say", "Never", "1x per day", "1x per week", "1x per month", "1x per year"]
         )
 
         mobility = st.select_slider(
