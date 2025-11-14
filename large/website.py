@@ -392,15 +392,15 @@ elif st.session_state.page == 'survey':
         st.markdown(f"**Crowding level at door**: {question['alt1_CD']} persons")
         st.markdown(f"**Crowding level at platform**: {question['alt1_CP']} persons per m²")
         # Bestimme die Beschreibung der "In-vehicle crowding"-Anzeige
-        if question['alt1_CrowdingRed'] == 1 and question['alt1_CIL'] == 1 and not question['alt1_CID'] == 1:
+        if question['alt1_CrowdingRed'] == 1 and question['alt1_CIL'] == 1 and question['alt1_CID'] != 1:
             crowding_text = "Red (LED stripe)"
-        elif question['alt1_CrowdingRed'] == 1 and question['alt1_CID'] == 1 and not question['alt1_CIL'] == 1:
+        elif question['alt1_CrowdingRed'] == 1 and question['alt1_CID'] == 1 and question['alt1_CIL'] != 1:
             crowding_text = "Red (Display)"
-         if question['alt1_CrowdingRed'] == 1 and question['alt1_CIL'] == 1 and question['alt1_CID'] == 1:
+        elif question['alt1_CrowdingRed'] == 1 and question['alt1_CIL'] == 1 and question['alt1_CID'] == 1:
             crowding_text = "Red (LED stripe & Display)"
-        elif question['alt1_CrowdingGreen'] == 1 and question['alt1_CIL'] == 1 and not question['alt1_CID'] == 1:
+        elif question['alt1_CrowdingGreen'] == 1 and question['alt1_CIL'] == 1 and question['alt1_CID'] != 1:
             crowding_text = "Green (LED stripe)"
-        elif question['alt1_CrowdingGreen'] == 1 and question['alt1_CID'] == 1 and not question['alt1_CIL'] == 1:
+        elif question['alt1_CrowdingGreen'] == 1 and question['alt1_CID'] == 1 and question['alt1_CIL'] != 1:
             crowding_text = "Green (Display)"
         elif question['alt1_CrowdingGreen'] == 1 and question['alt1_CID'] == 1 and question['alt1_CIL'] == 1:
             crowding_text = "Green (LED stripe & Display)"
@@ -408,14 +408,14 @@ elif st.session_state.page == 'survey':
             question['alt1_CrowdingGreen'] == 0
             and question['alt1_CrowdingRed'] == 0
             and question['alt1_CIL'] == 1
-            and not question['alt1_CID'] == 1
+            and question['alt1_CID'] != 1
         ):
             crowding_text = "Yellow (LED stripe)"
         elif (
             question['alt1_CrowdingGreen'] == 0
             and question['alt1_CrowdingRed'] == 0
             and question['alt1_CID'] == 1
-            and not question['alt1_CIL'] == 1
+            and question['alt1_CIL'] != 1
         ):
             crowding_text = "Yellow (Display)"
         elif (
