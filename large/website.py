@@ -205,14 +205,14 @@ In reality, no train has arrived yet — you are choosing where to position your
             width=True
     )
 
-    LED_desc_path = os.path.join(BASE_DIR, "LED_example.png")
+    LED_desc_path = os.path.join(BASE_DIR, "LED_example.jpg")
     st.image(
             LED_desc_path,
             caption="Example: LED stripes showing in-vehicle crowdedness",
             width=True
     )
 
-    Crowding_desc_path = os.path.join(BASE_DIR, "Crowding_example.png")
+    Crowding_desc_path = os.path.join(BASE_DIR, "Crowding_example.avif")
     st.image(
             Crowding_desc_path,
             caption="Example: Display showing in-vehicle crowdedness",
