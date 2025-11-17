@@ -167,7 +167,7 @@ This survey is part of a research project investigating how travelers make decis
 **Set-up:**
 
 Imagine you are standing on a subway platform, about to decide where to wait for an arriving train.
-You haven’t positioned yourself yet and must now choose a spot on the platform.
+You haven’t positioned yourself yet and must now choose a location on the platform.
 
 In each question, you will be shown two alternative boarding doors. Each door may belong to either the upcoming train, or the following train (i.e., you would skip the upcoming one and wait for the train after).
 Each option will include the following information:
@@ -188,13 +188,13 @@ Note about the image:
 The train is shown only to help visualize the door locations.
 In reality, no train has arrived yet — you are choosing where to position yourself before any train arrives.
 
-- **Walking distance to exit**: The distance from this door to the nearest exit at your destination station.
-- **Walking distance to door**: The distance from your current spot to the respective door. The selected door is marked with a **yellow rectangle** in the image.
-- **Obstacle**: This indicates whether there are obstacles (e.g., luggage) in your way when walking to this door.
-- **Crowding level at door**: How many passengers are currently waiting at this door.
-- **Crowding level at platform**: Crowdedness at the platform on your way to this door.
+- **Walking distance to exit**: The distance from this door location to the nearest exit at your destination station.
+- **Walking distance to door**: The distance from your current location to the respective door locations. The respective door is marked with a **yellow rectangle** in the image.
+- **Obstacle**: This indicates whether there are obstacles (e.g., luggage) in your way when walking to this door location.
+- **Crowding level at door**: How many passengers are currently waiting at this door location.
+- **Crowding level at platform**: Crowdedness at the platform on your way to this door location.
 - **In-vehicle crowding**: This indicates how crowded the train is expected to be when boarding through this door. It is shown in three levels: green (low), yellow (medium), red (high). The information might be shown on the platform display or as LED light indicators on the ground. 
-- **Time until train arrival**: This shows how long it will take until the train at this door arrives. Some doors belong to the current train arriving soon, while others belong to the following train (i.e., you would skip the current one and wait longer). This is indicated by the text "(following train)".
+- **Time until train arrival**: This shows how long it will take until the train at this door location arrives. Some doors (e.g., locations) belong to the current train arriving soon, while others belong to the following train (i.e., you would skip the current one and wait longer). This is indicated by the text "(following train)".
 - **Offered discount**: A reduction from the regular ticket price when boarding through this door. For example, your regular ticket fare is {ticket_price} Euro and a discount of 1 Euro is applied, the final price you pay is {ticket_price - 1:.2f} Euros.
     """)
 
