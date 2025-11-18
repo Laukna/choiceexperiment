@@ -156,92 +156,97 @@ if st.session_state.page == 'start':
     st.markdown(f"""
 Dear Participant,
 
-Thank you for your interest in this study!
-
-This survey is part of a research project investigating how travelers make decisions when boarding public transport vehicles (**subway**).
-
----
-
-**Please read the following information carefully before starting the survey.**
-
-**Set-up:**
-
-Imagine you are standing on a subway platform, about to decide where to wait for an arriving train.
-You haven’t positioned yourself yet and must now choose a location on the platform.
-
-In each question, you will be shown two alternative boarding doors. Each door may belong to either the upcoming train, or the following train (i.e., you would skip the upcoming one and wait for the train after).
-Each option will include the following information:
-""")
-
-    # Example figure: use relative path
-    example_fig_path = os.path.join(BASE_DIR, "Figures", "Folie1.png")
-    st.image(
-        example_fig_path,
-        caption="Example: The door is marked with a yellow rectangle",
-        width="content"
-    )
-
-    st.markdown(f"""
-
-Note about the image:
-
-The train is shown only to help visualize the door locations.
-In reality, no train has arrived yet — you are choosing where to position yourself before any train arrives.
-
-- **Walking distance to exit**: The distance from this door location to the nearest exit at your destination station.
-- **Walking distance to door**: The distance from your current location to the respective door locations. The respective door is marked with a **yellow rectangle** in the image.
-- **Obstacle**: This indicates whether there are obstacles (e.g., luggage) in your way when walking to this door location.
-- **Crowding level at door**: How many passengers are currently waiting at this door location.
-- **Crowding level at platform**: Crowdedness at the platform on your way to this door location.
-- **In-vehicle crowding**: This indicates how crowded the train is expected to be when boarding through this door. It is shown in three levels: green (low), yellow (medium), red (high). The information might be shown on the platform display or as LED light indicators on the ground. 
-- **Time until train arrival**: This shows how long it will take until the train at this door location arrives. Some doors (e.g., locations) belong to the current train arriving soon, while others belong to the following train (i.e., you would skip the current one and wait longer). This is indicated by the text "(following train)".
-- **Offered discount**: A reduction from the regular ticket price when boarding through this door. For example, your regular ticket fare is {ticket_price} Euro and a discount of 1 Euro is applied, the final price you pay is {ticket_price - 1:.2f} Euros.
-    """)
-
-    display_desc_path = os.path.join(BASE_DIR, "Display_Description.png")
-    st.image(
-            display_desc_path,
-            caption="Example: Upcoming and following train",
-            width="content"
-    )
-
-    LED_desc_path = os.path.join(BASE_DIR, "LED_example.jpg")
-    st.image(
-            LED_desc_path,
-            caption="Example: LED stripes showing in-vehicle crowdedness",
-            width="content"
-    )
-
-    Crowding_desc_path = os.path.join(BASE_DIR, "Crowding_example.avif")
-    st.image(
-            Crowding_desc_path,
-            caption="Example: Display showing in-vehicle crowdedness",
-            width="content"
-    )
-    
-    st.markdown(f"""
+Thank you very much for your interest in this study.
+This survey is part of a research project examining how travelers choose where to board public transport vehicles (**subways**).
 
 ---
 
-**This is the given scenario for your trip:** This remains constant throughout the experiment.
+**Before you start:**
+Please read this short explanation carefully.
+It contains all the information needed to understand the task. 
+
+**Your situation in this experiment:**
+Imagine you are standing on a subway platform and have not yet chosen where to wait for the train. You haven’t positioned yourself yet and must now choose a location on the platform.
+Throughout the entire experiment, the following conditions remain the same:
 - {tm_text}
 - Your regular ticket price for this trip is **{ticket_price} Euros**.
 - The total travel time for your trip is **{trip_duration} minutes**.
 - {pt_text}
 
-
----
-
 **What you will do:**
+You will answer 12 questions. In each questions you will see two door options. 
+Your task is to choose the door you would prefer to board through. If neither door is suitable you may select "None of both". 
+There are no right or wrong answers, we are interested in you personal preferences. 
 
-You will see 12 of these door choice questions.
+**Understanding the door information:** 
+In each question, you will see two doors to choose from: Door A and Door B.
+Each door is shown with a picture and several pieces of information.
 
-In each case, your task is to choose the door you would prefer to board through.
-If neither option suits you, you may choose to opt out.
+The picture shows a train on the platform.
+The train in the picture is fictional and only helps you see where the door is located.
+The door you are evaluating is marked with a yellow rectangle.
+In the real scenario, the train has not yet arrived and you are choosing your waiting position.
 
-There are no right or wrong answers — we are interested in your personal preferences.
+For each door, you will see the following details:
+- **Walking distance to exit**: How far this door is from the nearest exit at your destination station.
+- **Walking distance to door**: How far you must walk on the platform to reach this door.
+- **Obstacle**: Whether something blocks your way (for example, a suitcase).
+- **Crowding level at door**: How many people are already waiting at this door location.
+- **Crowding level at platform**: How crowded it is on the way to the door location.
+- **In-vehicle crowding**: How crowded the train is expected to be inside near this door. This may be shown as colors (green = low, yellow = medium, red = high) and may appear as LED lights on the ground or on the display above the platform. 
+- **Time until train arrival**: How long it will take until the train reaches this door. If the door belongs to the following train, this means you would skip the upcoming train and wait for the next one.
+- **Offered discount**: A reduction from the regular ticket price when boarding through this door. For example, your regular ticket fare is {ticket_price} Euro and a discount of 1 Euro is applied, the final price you pay is {ticket_price - 1:.2f} Euros.
 
----
+You should use all of this information to decide which door you prefer.
+
+**Examples of what you will see:** """)
+example_fig_path = os.path.join(BASE_DIR, "Figures", "rectangle_exp.png")
+    st.image(
+        example_fig_path,
+        caption="Example: The door is marked with a yellow rectangle.",
+        width="content"
+    )
+
+crowding_real_fig_path = os.path.join(BASE_DIR, "Figures", "crowding_real.png")
+    st.image(
+        crowding_real_fig_path,
+        caption="Real-world: In-vehicle crowding information shown via LED and display. ",
+        width="content"
+    )
+
+crowding_LED_fig_path = os.path.join(BASE_DIR, "Figures", "LED_exp.png")
+    st.image(
+        crowding_LED_fig_path,
+        caption="Example: In-vehicle crowding information shown via LED. ",
+        width="content"
+    )
+
+crowding_display_fig_path = os.path.join(BASE_DIR, "Figures", "Display_exp.png")
+    st.image(
+        crowding_display_fig_path,
+        caption="Example: In-vehicle crowding information shown via display. ",
+        width="content"
+    )
+
+time_fig_path = os.path.join(BASE_DIR, "Figures", "Display_Description.png")
+    st.image(
+        time_fig_path,
+        caption="Real-world: Display showing upcoming and following train. ",
+        width="content"
+    )
+
+disc_fig_path = os.path.join(BASE_DIR, "Figures", "discount.png")
+    st.image(
+        disc_fig_path,
+        caption="Example: How a discount is shown.",
+        width="content"
+    )
+
+
+
+
+
+st.markdown(f"""
 
 **Demographic Information:**
 
