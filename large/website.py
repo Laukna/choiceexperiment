@@ -198,53 +198,53 @@ For each door, you will see the following details:
 You should use all of this information to decide which door you prefer.
 
 **Examples of what you will see:** """)
-example_fig_path = os.path.join(BASE_DIR, "rectangle_exp.png")
-st.image(
-    example_fig_path,
-    caption="Example: The door location is marked with a yellow rectangle.",
-    width="content"
-)
-
-crowding_real_fig_path = os.path.join(BASE_DIR, "crowding_real.png")
-st.image(
-    crowding_real_fig_path,
-    caption="Real-world: In-vehicle crowding information shown via LED and display. ",
-    width="content"
-)
-
-crowding_LED_fig_path = os.path.join(BASE_DIR, "LED_exp.png")
-st.image(
-    crowding_LED_fig_path,
-    caption="Example: In-vehicle crowding information shown via LED. ",
-    width="content"
-)
-
-crowding_display_fig_path = os.path.join(BASE_DIR, "Display_exp.png")
-st.image(
-    crowding_display_fig_path,
-    caption="Example: In-vehicle crowding information shown via display. ",
-    width="content"
-)
-
-time_fig_path = os.path.join(BASE_DIR, "Display_Description.png")
-st.image(
-    time_fig_path,
-    caption="Real-world: Display showing upcoming and following train. ",
-    width="content"
-)
-
-disc_fig_path = os.path.join(BASE_DIR, "discount.png")
-st.image(
-    disc_fig_path,
-    caption="Example: How a discount is shown.",
-    width="content"
-)
-
-
-
-
-
-st.markdown(f"""
+    example_fig_path = os.path.join(BASE_DIR, "rectangle_exp.png")
+    st.image(
+        example_fig_path,
+        caption="Example: The door location is marked with a yellow rectangle.",
+        width="content"
+    )
+    
+    crowding_real_fig_path = os.path.join(BASE_DIR, "crowding_real.png")
+    st.image(
+        crowding_real_fig_path,
+        caption="Real-world: In-vehicle crowding information shown via LED and display. ",
+        width="content"
+    )
+    
+    crowding_LED_fig_path = os.path.join(BASE_DIR, "LED_exp.png")
+    st.image(
+        crowding_LED_fig_path,
+        caption="Example: In-vehicle crowding information shown via LED. ",
+        width="content"
+    )
+    
+    crowding_display_fig_path = os.path.join(BASE_DIR, "Display_exp.png")
+    st.image(
+        crowding_display_fig_path,
+        caption="Example: In-vehicle crowding information shown via display. ",
+        width="content"
+    )
+    
+    time_fig_path = os.path.join(BASE_DIR, "Display_Description.png")
+    st.image(
+        time_fig_path,
+        caption="Real-world: Display showing upcoming and following train. ",
+        width="content"
+    )
+    
+    disc_fig_path = os.path.join(BASE_DIR, "discount.png")
+    st.image(
+        disc_fig_path,
+        caption="Example: How a discount is shown.",
+        width="content"
+    )
+    
+    
+    
+    
+    
+    st.markdown(f"""
 
 **Demographic Information:**
 
