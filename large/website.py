@@ -358,7 +358,7 @@ elif st.session_state.page == 'survey':
     Ticket price: **{ticket_price} Euros**.  
     Each door option may offer a discount that will reduce this price.
 
-    Total travel time: **{trip_duration}** minutes. 
+    Total travel time: **{trip_duration} minutes**. 
 
     **Following train** indicates waiting for the next trip, not taking the current one. 
     """)
