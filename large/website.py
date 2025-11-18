@@ -349,14 +349,15 @@ elif st.session_state.page == 'survey':
     st.title("Train Door Choice Survey")
     
     st.write(f"""
-    Remember: {tm_text}
+    Remember: 
+    {tm_text}
 
-    Remember: The regular ticket price for this trip is **{ticket_price} Euros**.  
+    Ticket price: **{ticket_price} Euros**.  
     Each door option may offer a discount that will reduce this price.
 
-    Remember: The total travel time for your trip is **{trip_duration}** minutes. 
+    Total travel time: **{trip_duration}** minutes. 
 
-    Remember: **Following train** indicates waiting for the next trip, not taking the current one. 
+    **Following train** indicates waiting for the next trip, not taking the current one. 
     """)
 
     
@@ -460,11 +461,11 @@ elif st.session_state.page == 'survey':
     with col2:
         st.subheader("Door B")
         st.image(img_path_B, caption="Option B", width="content")
-        st.markdown(f"**Walking distance to exit**: {question['alt2_D2E']} m")
-        st.markdown(f"**Walking distance to door**: {question['alt2_D2D']} m")
-        st.markdown(f"**Obstacle**: {'Yes' if question['alt2_O'] == 1 else 'No'}")
-        st.markdown(f"**Crowding level at door**: {question['alt2_CD']} persons")
-        st.markdown(f"**Crowding level at platform**: {question['alt2_CP']} person(s) per m²")
+        st.markdown(f"{question['alt2_D2E']} m")
+        st.markdown(f"{question['alt2_D2D']} m")
+        st.markdown(f"{'Yes' if question['alt2_O'] == 1 else 'No'}")
+        st.markdown(f"{question['alt2_CD']} persons")
+        st.markdown(f"{question['alt2_CP']} person(s) per m²")
         # Bestimme die Beschreibung der "In-vehicle crowding"-Anzeige
         if question['alt2_CrowdingRed'] == 1 and question['alt2_CIL'] == 1 and question['alt2_CID'] == 0:
             crowding_text = "Red (LED stripe)"
@@ -504,7 +505,7 @@ elif st.session_state.page == 'survey':
             crowding_text = "No information"  # Fallback, falls keine Bedingung zutrifft
 
         
-        st.markdown(f"**In-vehicle crowding**: {crowding_text}")
+        st.markdown(f"{crowding_text}")
         time_recent = st.session_state.get("time_recent")
         time_subseq = st.session_state.get("time_subseq")
 
@@ -520,10 +521,10 @@ elif st.session_state.page == 'survey':
         else:
             time_text = f"{time_subseq} minutes (following train)"
 
-        st.markdown(f"**Time until train arrival**: {time_text}")
+        st.markdown(f"{time_text}")
 
         discount_amount_1 = round(ticket_price * question['alt2_D'] / 100, 2)
-        st.markdown(f"**Offered discount**:  You pay {ticket_price * (1 - question['alt2_D']/100):.2f} Euros ({question['alt2_D']}% discount)")
+        st.markdown(f"You pay {ticket_price * (1 - question['alt2_D']/100):.2f} Euros ({question['alt2_D']}% discount)")
 
     # Get participant's choice
     with st.form(key=f"form_{idx}"):
