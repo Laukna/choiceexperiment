@@ -166,7 +166,7 @@ Please read this short explanation carefully.
 It contains all the information needed to understand the task. 
 
 **Your situation in this experiment:**
-Imagine you are standing on a subway platform and have not yet chosen where to wait for the train. You haven’t positioned yourself yet and must now choose a location on the platform.
+Imagine you are standing on a subway platform and have not yet chosen where to wait for the train.
 Throughout the entire experiment, the following conditions remain the same:
 - {tm_text}
 - Your regular ticket price for this trip is **{ticket_price} Euros**.
@@ -174,7 +174,7 @@ Throughout the entire experiment, the following conditions remain the same:
 - {pt_text}
 
 **What you will do:**
-You will answer 12 questions. In each questions you will see two door options. 
+You will answer 12 questions. In each question you will see two door options. 
 Your task is to choose the door you would prefer to board through. If neither door is suitable you may select "None of both". 
 There are no right or wrong answers, we are interested in you personal preferences. 
 
@@ -182,10 +182,8 @@ There are no right or wrong answers, we are interested in you personal preferenc
 In each question, you will see two doors to choose from: Door A and Door B.
 Each door is shown with a picture and several pieces of information.
 
-The picture shows a train on the platform.
-The train in the picture is fictional and only helps you see where the door is located.
-The door you are evaluating is marked with a yellow rectangle.
-In the real scenario, the train has not yet arrived and you are choosing your waiting position.
+The picture shows a train on the platform. In the given scenario, the train has not yet arrived and you are choosing your waiting position. The shown train only helps you see where the door is located.  
+
 
 For each door, you will see the following details:
 - **Walking distance to exit**: How far this door is from the nearest exit at your destination station.
@@ -200,42 +198,42 @@ For each door, you will see the following details:
 You should use all of this information to decide which door you prefer.
 
 **Examples of what you will see:** """)
-example_fig_path = os.path.join(BASE_DIR, "Figures", "rectangle_exp.png")
+example_fig_path = os.path.join(BASE_DIR, "rectangle_exp.png")
 st.image(
     example_fig_path,
     caption="Example: The door is marked with a yellow rectangle.",
     width="content"
 )
 
-crowding_real_fig_path = os.path.join(BASE_DIR, "Figures", "crowding_real.png")
+crowding_real_fig_path = os.path.join(BASE_DIR, "crowding_real.png")
 st.image(
     crowding_real_fig_path,
     caption="Real-world: In-vehicle crowding information shown via LED and display. ",
     width="content"
 )
 
-crowding_LED_fig_path = os.path.join(BASE_DIR, "Figures", "LED_exp.png")
+crowding_LED_fig_path = os.path.join(BASE_DIR, "LED_exp.png")
 st.image(
     crowding_LED_fig_path,
     caption="Example: In-vehicle crowding information shown via LED. ",
     width="content"
 )
 
-crowding_display_fig_path = os.path.join(BASE_DIR, "Figures", "Display_exp.png")
+crowding_display_fig_path = os.path.join(BASE_DIR, "Display_exp.png")
 st.image(
     crowding_display_fig_path,
     caption="Example: In-vehicle crowding information shown via display. ",
     width="content"
 )
 
-time_fig_path = os.path.join(BASE_DIR, "Figures", "Display_Description.png")
+time_fig_path = os.path.join(BASE_DIR, "Display_Description.png")
 st.image(
     time_fig_path,
     caption="Real-world: Display showing upcoming and following train. ",
     width="content"
 )
 
-disc_fig_path = os.path.join(BASE_DIR, "Figures", "discount.png")
+disc_fig_path = os.path.join(BASE_DIR, "discount.png")
 st.image(
     disc_fig_path,
     caption="Example: How a discount is shown.",
