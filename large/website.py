@@ -193,8 +193,8 @@ For each door, you will see the following details:
 - **Obstacle**: Whether something blocks your way (for example, a suitcase).
 - **Crowding level at door**: How many people are already waiting at this door location.
 - **Crowding level at platform**: How crowded it is on the way to the door location.
-- **In-vehicle crowding**: How crowded the train is expected to be inside near this door. This may be shown as colors (green = low, yellow = medium, red = high) and may appear as LED lights on the ground or on the display above the platform. 
-- **Time until train arrival**: How long it will take until the train reaches this door. If the door belongs to the following train, this means you would skip the upcoming train and wait for the next one.
+- **In-vehicle crowding**: How crowded the train is expected to be inside this door. This may be shown as colors (green = low, yellow = medium, red = high) and may appear as LED lights on the ground or on the display above the platform. 
+- **Time until train arrival**: How long it will take until the train arrives. If the door belongs to the following train, this means you would skip the upcoming train and wait for the next one.
 - **Offered discount**: A reduction from the regular ticket price when boarding through this door. For example, your regular ticket fare is {ticket_price} Euro and a discount of 1 Euro is applied, the final price you pay is {ticket_price - 1:.2f} Euros.
 
 You should use all of this information to decide which door you prefer.
@@ -466,11 +466,11 @@ elif st.session_state.page == 'survey':
     with col2:
         st.subheader("Door B")
         st.image(img_path_B, caption="Option B", width="content")
-        st.markdown(f"{question['alt2_D2E']} m")
-        st.markdown(f"{question['alt2_D2D']} m")
-        st.markdown(f"{'Yes' if question['alt2_O'] == 1 else 'No'}")
-        st.markdown(f"{question['alt2_CD']} persons")
-        st.markdown(f"{question['alt2_CP']} person(s) per m²")
+        st.markdown(f"**Walking distance to exit**: {question['alt2_D2E']} m")
+        st.markdown(f"**Walking distance to door**: {question['alt2_D2D']} m")
+        st.markdown(f"**Obstacle**: {'Yes' if question['alt2_O'] == 1 else 'No'}")
+        st.markdown(f"**Crowding level at door**: {question['alt2_CD']} persons")
+        st.markdown(f"**Crowding level at platform**: {question['alt2_CP']} person(s) per m²")
         # Bestimme die Beschreibung der "In-vehicle crowding"-Anzeige
         if question['alt2_CrowdingRed'] == 1 and question['alt2_CIL'] == 1 and question['alt2_CID'] == 0:
             crowding_text = "Red (LED stripe)"
@@ -510,7 +510,7 @@ elif st.session_state.page == 'survey':
             crowding_text = "No information"  # Fallback, falls keine Bedingung zutrifft
 
         
-        st.markdown(f"{crowding_text}")
+        st.markdown(f"**In-vehicle crowding**: {crowding_text}")
         time_recent = st.session_state.get("time_recent")
         time_subseq = st.session_state.get("time_subseq")
 
@@ -526,10 +526,10 @@ elif st.session_state.page == 'survey':
         else:
             time_text = f"{time_subseq} minutes (following train)"
 
-        st.markdown(f"{time_text}")
+        st.markdown(f"**Time until train arrival**: {time_text}")
 
         discount_amount_1 = round(ticket_price * question['alt2_D'] / 100, 2)
-        st.markdown(f"You pay {ticket_price * (1 - question['alt2_D']/100):.2f} Euros ({question['alt2_D']}% discount)")
+        st.markdown(f"**Offered discount**:  You pay {ticket_price * (1 - question['alt2_D']/100):.2f} Euros ({question['alt2_D']}% discount)")
 
     # Get participant's choice
     with st.form(key=f"form_{idx}"):
