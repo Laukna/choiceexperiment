@@ -154,7 +154,7 @@ if st.session_state.page == 'start':
     st.title("Welcome to the Train Door Choice Experiment")
 
     st.markdown(f"""
-Dear Participant,
+Dear participant,
 
 Thank you very much for your interest in this study.
 This survey is part of a research project examining how travelers choose where to board public transport vehicles (**subways**).
@@ -186,8 +186,8 @@ The picture shows a train on the platform. In the given scenario, the train has 
 
 
 For each door, you will see the following details:
-- **Walking distance to exit**: How far this door is from the nearest exit at your destination station.
-- **Walking distance to door**: How far you must walk on the platform to reach this door.
+- **Walking distance to exit**: How far this door location is from the nearest exit at your destination station.
+- **Walking distance to door**: How far you must walk on the platform to reach this door location.
 - **Obstacle**: Whether something blocks your way (for example, a suitcase).
 - **Crowding level at door**: How many people are already waiting at this door location.
 - **Crowding level at platform**: How crowded it is on the way to the door location.
@@ -201,7 +201,7 @@ You should use all of this information to decide which door you prefer.
 example_fig_path = os.path.join(BASE_DIR, "rectangle_exp.png")
 st.image(
     example_fig_path,
-    caption="Example: The door is marked with a yellow rectangle.",
+    caption="Example: The door location is marked with a yellow rectangle.",
     width="content"
 )
 
@@ -270,79 +270,79 @@ By continuing, you confirm that you have read and understood the information pro
     # --- COMPREHENSION CHECK ---
 
 # --- COMPREHENSION CHECK ---
-st.markdown("### Quick Check Before Starting")
-st.markdown("""
-To make sure you have read and understood the key information, please answer the following short questions in order to proceed:
-""")
-
-with st.form("comprehension_form"):
-    price_options = [
-        f"€{ticket_price - 2:.2f}",
-        f"€{ticket_price - 1:.2f}",
-        f"€{ticket_price:.2f}",  # correct
-        f"€{ticket_price + 1:.2f}"
-    ]
-    answer_price = st.radio(
-        "1. What is the regular ticket price for your trip in this experiment?",
-        options=price_options,
-        key="comprehension_price"
-    )
-
-    duration_options = [
-        f"{trip_duration - 50} minutes" if trip_duration == 60 else "5 minutes",
-        f"{trip_duration - 1} minutes",
-        f"{trip_duration} minutes",
-        f"{trip_duration + 10} minutes"
-    ]
-    answer_duration = st.radio(
-        "2. How long is your trip from origin to destination?",
-        options=duration_options,
-        key="comprehension_duration"
-    )
-
-    tm_options = [
-            "Alone with a small backpack",
-            "Alone with a business bag",
-            "In a group with luggage"
-        ]
-
-    # Korrektes Label anhand des Session-States bestimmen
-    travel_mode = st.session_state.travel_mode
-    if travel_mode == "alone_backpack":
-        tm_label_correct = "Alone with a small backpack"
-    elif travel_mode == "alone_business":
-        tm_label_correct = "Alone with a business bag"
-    else:  # "group_luggage"
-        tm_label_correct = "In a group with luggage"
-
-        # Frage anzeigen
-    answer_tm = st.radio(
-        "3. How are you traveling in this experiment?",
-        options=tm_options,
-        key="comprehension_alone"
-    )
+    st.markdown("### Quick Check Before Starting")
+    st.markdown("""
+    To make sure you have read and understood the key information, please answer the following short questions in order to proceed:
+    """)
     
-    confirm_clicked = st.form_submit_button("Confirm Answers")
-
-if confirm_clicked:
-    is_correct_price = answer_price == f"€{ticket_price:.2f}"
-    is_correct_duration = answer_duration == f"{trip_duration} minutes"
-    is_correct_alone = answer_tm == tm_label_correct
-
-    if is_correct_price and is_correct_duration and is_correct_alone:
-        st.success("All correct – you may now proceed to the survey.")
-        st.session_state.allow_start = True
-    else:
-        st.error("One or more answers are incorrect. Please read the instructions above again carefully.")
-        st.session_state.allow_start = False
-
-
-# --- Conditional start button ---
-if st.session_state.get("allow_start", False) and st.button("Start Survey"):
-    st.session_state.page = 'survey'
-    st.session_state.current_idx = 0  # reset index
-    st.rerun()
-
+    with st.form("comprehension_form"):
+        price_options = [
+            f"€{ticket_price - 2:.2f}",
+            f"€{ticket_price - 1:.2f}",
+            f"€{ticket_price:.2f}",  # correct
+            f"€{ticket_price + 1:.2f}"
+        ]
+        answer_price = st.radio(
+            "1. What is the regular ticket price for your trip in this experiment?",
+            options=price_options,
+            key="comprehension_price"
+        )
+    
+        duration_options = [
+            f"{trip_duration - 50} minutes" if trip_duration == 60 else "5 minutes",
+            f"{trip_duration - 1} minutes",
+            f"{trip_duration} minutes",
+            f"{trip_duration + 10} minutes"
+        ]
+        answer_duration = st.radio(
+            "2. How long is your trip from origin to destination?",
+            options=duration_options,
+            key="comprehension_duration"
+        )
+    
+        tm_options = [
+                "Alone with a small backpack",
+                "Alone with a business bag",
+                "In a group with luggage"
+            ]
+    
+        # Korrektes Label anhand des Session-States bestimmen
+        travel_mode = st.session_state.travel_mode
+        if travel_mode == "alone_backpack":
+            tm_label_correct = "Alone with a small backpack"
+        elif travel_mode == "alone_business":
+            tm_label_correct = "Alone with a business bag"
+        else:  # "group_luggage"
+            tm_label_correct = "In a group with luggage"
+    
+            # Frage anzeigen
+        answer_tm = st.radio(
+            "3. How are you traveling in this experiment?",
+            options=tm_options,
+            key="comprehension_alone"
+        )
+        
+        confirm_clicked = st.form_submit_button("Confirm Answers")
+    
+    if confirm_clicked:
+        is_correct_price = answer_price == f"€{ticket_price:.2f}"
+        is_correct_duration = answer_duration == f"{trip_duration} minutes"
+        is_correct_alone = answer_tm == tm_label_correct
+    
+        if is_correct_price and is_correct_duration and is_correct_alone:
+            st.success("All correct – you may now proceed to the survey.")
+            st.session_state.allow_start = True
+        else:
+            st.error("One or more answers are incorrect. Please read the instructions above again carefully.")
+            st.session_state.allow_start = False
+    
+    
+    # --- Conditional start button ---
+    if st.session_state.get("allow_start", False) and st.button("Start Survey"):
+        st.session_state.page = 'survey'
+        st.session_state.current_idx = 0  # reset index
+        st.rerun()
+    
 
 
 
@@ -353,14 +353,11 @@ elif st.session_state.page == 'survey':
     
     st.write(f"""
     Remember: 
-    {tm_text}
-
-    Ticket price: **{ticket_price} Euros**.  
-    Each door option may offer a discount that will reduce this price.
-
-    Total travel time: **{trip_duration} minutes**. 
-
-    **Following train** indicates waiting for the next trip, not taking the current one. 
+    - {tm_text}
+    - Ticket price: **{ticket_price} Euros**.  
+    - Each door option may offer a discount that will reduce this price.
+    - Total travel time: **{trip_duration} minutes**. 
+    - **Following train** indicates waiting for the next trip, not taking the current one. 
     """)
 
     
