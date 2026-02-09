@@ -171,13 +171,13 @@ Throughout the entire experiment, the following conditions remain the same:
 - {pt_text}
 
 **What you will do:**
-You will answer 12 questions. In each question you will see a picture that shows three options: Door A, Door B, and Next train. 
+You will answer 12 questions. In each question, you will see a picture that shows three options: Door A, Door B, and Next train. 
 Your task is to choose the option you would prefer. If none of the options is suitable, you may select “None of them”.
-There are no right or wrong answers, we are interested in you personal preferences. 
+There are no right or wrong answers; we are interested in you personal preferences. 
 
 **Understanding the door information:** 
 
-The picture shows a train on the platform. In the given scenario, the train has not yet arrived and you are choosing your waiting position. The shown train only helps you see where the doors are located.  
+The picture shows a train on the platform. In the given scenario, the train has not yet arrived, and you are choosing your waiting position. The shown train only helps you see where the doors are located.  
 
 
 For each door, you will see the following details:
@@ -185,7 +185,7 @@ For each door, you will see the following details:
 - **Walking distance to door**: How far you must walk on the platform to reach this door location.
 - **Obstacle**: Whether something blocks your way (for example, a cleaning trolley).
 - **Crowding level at door**: How many people are already waiting at this door location.
-- **In-vehicle crowding**: How crowded the train is expected to be inside this door. This may be shown as colors (green = low, yellow = medium, red = high) and may appear as LED lights on the ground or on the display above the platform. 
+- **In-vehicle crowding**: How crowded the train is expected to be inside this door. This may be represented by colors (green = low, yellow = medium, red = high) and may appear as LED lights on the ground or on the display above the platform. 
 - **Time until train arrival**: How long it will take until the train arrives. If the door belongs to the following train, this means you would skip the upcoming train and wait for the next one.
 - **Offered discount**: A reduction from the regular ticket price when boarding through this door. For example, your regular ticket fare is {ticket_price} Euro and a discount of {discount_percent:.0f}% is applied, the final price you pay is {ticket_price * (1 - discount_percent/100):.2f} Euros.
 
@@ -198,7 +198,7 @@ For the Next train option, you will only see:
 You should use all of this information to decide which option you prefer.
 
 **Examples of what you will see:** """)
-    example_fig_path = os.path.join(BASE_DIR, "rectangle_exp.png")
+    example_fig_path = os.path.join(BASE_DIR, "Figures", "rectangle_exp.png")
     st.image(
         example_fig_path,
         caption="Example: Door A, Door B, and the Next train option are shown in one picture; door locations are marked.",
