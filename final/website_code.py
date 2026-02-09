@@ -210,6 +210,7 @@ You should use all of this information to decide which option you prefer.
         crowding_real_fig_path,
         caption="Real-world: In-vehicle crowding information shown via LED and display. ",
         width="content"
+    )
 
     
     
