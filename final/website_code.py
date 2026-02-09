@@ -171,7 +171,7 @@ Throughout the entire experiment, the following conditions remain the same:
 - {pt_text}
 
 **What you will do:**
-You will answer 12 questions. In each question, you will see a picture that shows three options: Door A, Door B, and Next train. 
+You will answer 12 questions. In each question, you will see a picture that shows three options: Door 1, Door 2, and Next train. 
 Your task is to choose the option you would prefer. If none of the options is suitable, you may select “None of them”.
 There are no right or wrong answers; we are interested in you personal preferences. 
 
@@ -186,7 +186,7 @@ For each door, you will see the following details:
 - **Obstacle**: Whether something blocks your way (for example, a cleaning trolley).
 - **Crowding level at door**: How many people are already waiting at this door location.
 - **In-vehicle crowding**: How crowded the train is expected to be inside this door. This may be represented by colors (green = low, yellow = medium, red = high) and may appear as LED lights on the ground or on the display above the platform. 
-- **Time until train arrival**: How long it will take until the train arrives. If the door belongs to the following train, this means you would skip the upcoming train and wait for the next one.
+- **Time until train arrival**: How long it will take until the train arrives. 
 - **Offered discount**: A reduction from the regular ticket price when boarding through this door. For example, your regular ticket fare is {ticket_price} Euro and a discount of {discount_percent:.0f}% is applied, the final price you pay is {ticket_price * (1 - discount_percent/100):.2f} Euros.
 
 
@@ -201,7 +201,7 @@ You should use all of this information to decide which option you prefer.
     example_fig_path = os.path.join(BASE_DIR, "Figures", "rectangle_exp.png")
     st.image(
         example_fig_path,
-        caption="Example: Door A, Door B, and the Next train option are shown in one picture; door locations are marked.",
+        caption="Example: Door 1, Door 2, and the Next train option are shown in one picture; door locations are marked. In-vehicle crowdings are indicated by LED stripes on the ground and on the display. The discount is shown on the mobile phone.",
         width="content"
     )
     
@@ -340,7 +340,7 @@ elif st.session_state.page == 'survey':
 
     idx = st.session_state.current_idx
     if f"temp_choice_{idx}" not in st.session_state:
-        st.session_state[f"temp_choice_{idx}"] = st.session_state.responses.get(idx, "Door A")
+        st.session_state[f"temp_choice_{idx}"] = st.session_state.responses.get(idx, "Door 1")
 
     question = questions.iloc[idx]
 
@@ -353,132 +353,73 @@ elif st.session_state.page == 'survey':
     
     img_path = os.path.join(BASE_DIR, "Figures", f"Folie{img_num}.png")
 
-    st.subheader("Your options:")
-    st.image(img_path, caption="Options A, B, and Next train", use_container_width=True)
+
+    st.image(img_path, caption="Options Door 1, Door 2, and Next train", use_container_width=True)
+
+    # --- mapping: which alternative is on the LEFT in the image? (bigger D2D = further left) ---
+    alt1_left = float(question["alt1_D2D"]) > float(question["alt2_D2D"])
+    left_alt  = 1 if alt1_left else 2
+    right_alt = 2 if alt1_left else 1
+    
+    def aval(alt, field):
+        return question[f"alt{alt}_{field}"]
+    
+    def crowding_text_for(alt):
+        red = aval(alt, "CrowdingRed")
+        green = aval(alt, "CrowdingGreen")
+        cil = aval(alt, "CIL")
+        cid = aval(alt, "CID")
+    
+        if red == 1 and cil == 1 and cid != 1:
+            return "Red (LED stripe)"
+        elif red == 1 and cid == 1 and cil != 1:
+            return "Red (Display)"
+        elif red == 1 and cil == 1 and cid == 1:
+            return "Red (LED stripe & Display)"
+        elif green == 1 and cil == 1 and cid != 1:
+            return "Green (LED stripe)"
+        elif green == 1 and cid == 1 and cil != 1:
+            return "Green (Display)"
+        elif green == 1 and cil == 1 and cid == 1:
+            return "Green (LED stripe & Display)"
+        elif green == 0 and red == 0 and cil == 1 and cid != 1:
+            return "Yellow (LED stripe)"
+        elif green == 0 and red == 0 and cid == 1 and cil != 1:
+            return "Yellow (Display)"
+        elif green == 0 and red == 0 and cid == 1 and cil == 1:
+            return "Yellow (LED stripe & Display)"
+        else:
+            return "No information"
+
+
+
 
     col1, col2 = st.columns(2)
+
     with col1:
-        st.subheader("Door A")
-        st.markdown(f"**Walking distance to exit**: {question['alt1_D2E']} m")
-        st.markdown(f"**Walking distance to door**: {question['alt1_D2D']} m")
-        st.markdown(f"**Obstacle**: {'Yes' if question['alt1_O'] == 1 else 'No'}")
-        st.markdown(f"**Crowding level at door**: {question['alt1_CD']} persons")
-        # Bestimme die Beschreibung der "In-vehicle crowding"-Anzeige
-        if question['alt1_CrowdingRed'] == 1 and question['alt1_CIL'] == 1 and question['alt1_CID'] != 1:
-            crowding_text = "Red (LED stripe)"
-        elif question['alt1_CrowdingRed'] == 1 and question['alt1_CID'] == 1 and question['alt1_CIL'] != 1:
-            crowding_text = "Red (Display)"
-        elif question['alt1_CrowdingRed'] == 1 and question['alt1_CIL'] == 1 and question['alt1_CID'] == 1:
-            crowding_text = "Red (LED stripe & Display)"
-        elif question['alt1_CrowdingGreen'] == 1 and question['alt1_CIL'] == 1 and question['alt1_CID'] != 1:
-            crowding_text = "Green (LED stripe)"
-        elif question['alt1_CrowdingGreen'] == 1 and question['alt1_CID'] == 1 and question['alt1_CIL'] != 1:
-            crowding_text = "Green (Display)"
-        elif question['alt1_CrowdingGreen'] == 1 and question['alt1_CID'] == 1 and question['alt1_CIL'] == 1:
-            crowding_text = "Green (LED stripe & Display)"
-        elif (
-            question['alt1_CrowdingGreen'] == 0
-            and question['alt1_CrowdingRed'] == 0
-            and question['alt1_CIL'] == 1
-            and question['alt1_CID'] != 1
-        ):
-            crowding_text = "Yellow (LED stripe)"
-        elif (
-            question['alt1_CrowdingGreen'] == 0
-            and question['alt1_CrowdingRed'] == 0
-            and question['alt1_CID'] == 1
-            and question['alt1_CIL'] != 1
-        ):
-            crowding_text = "Yellow (Display)"
-        elif (
-            question['alt1_CrowdingGreen'] == 0
-            and question['alt1_CrowdingRed'] == 0
-            and question['alt1_CID'] == 1
-            and question['alt1_CIL'] == 1
-        ):
-            crowding_text = "Yellow (LED stripe & Display)"
-        else:
-            crowding_text = "No information"  # Fallback, falls keine Bedingung zutrifft
-
-        
-        st.markdown(f"**In-vehicle crowding**: {crowding_text}")
-        time_recent = st.session_state.get("time_recent")
-
-        # Optional: als ganze Minuten formatieren, falls als float übergeben
-        def fmt_minutes(x):
-            return None if x is None else f"{int(round(x))} m"
-
-        
-        time_text = f"{time_recent} minute(s)"
-
-        st.markdown(f"**Time until train arrival**: {time_text}")
-
-        discount_amount_1 = round(ticket_price * question['alt1_D'] / 100, 2)
-        st.markdown(f"**Offered discount**:  You pay {ticket_price * (1 - question['alt1_D']/100):.2f} Euros ({question['alt1_D']}% discount)")
+        st.subheader(f"Door {left_alt}")
+        st.markdown(f"**Walking distance to exit**: {aval(left_alt,'D2E')} m")
+        st.markdown(f"**Walking distance to door**: {aval(left_alt,'D2D')} m")
+        st.markdown(f"**Obstacle**: {'Yes' if aval(left_alt,'O') == 1 else 'No'}")
+        st.markdown(f"**Crowding level at door**: {aval(left_alt,'CD')} persons")
+        st.markdown(f"**In-vehicle crowding**: {crowding_text_for(left_alt)}")
+        st.markdown(f"**Time until train arrival**: {time_recent} minute(s)")
+        st.markdown(
+            f"**Offered discount**:  You pay {ticket_price * (1 - aval(left_alt,'D')/100):.2f} Euros ({aval(left_alt,'D')}% discount)"
+        )
     
-        
-
-
-
     with col2:
-        st.subheader("Door B")
-        st.markdown(f"**Walking distance to exit**: {question['alt2_D2E']} m")
-        st.markdown(f"**Walking distance to door**: {question['alt2_D2D']} m")
-        st.markdown(f"**Obstacle**: {'Yes' if question['alt2_O'] == 1 else 'No'}")
-        st.markdown(f"**Crowding level at door**: {question['alt2_CD']} persons")
-        # Bestimme die Beschreibung der "In-vehicle crowding"-Anzeige
-        if question['alt2_CrowdingRed'] == 1 and question['alt2_CIL'] == 1 and question['alt2_CID'] == 0:
-            crowding_text = "Red (LED stripe)"
-        elif question['alt2_CrowdingRed'] == 1 and question['alt2_CID'] == 1 and question['alt2_CIL'] == 0:
-            crowding_text = "Red (Display)"
-        elif question ['alt2_CrowdingRed'] == 1 and question['alt2_CID'] == 1 and question['alt2_CIL'] == 1:
-            crowding_text = "Red (Display & LED stripe)"
-        elif question['alt2_CrowdingGreen'] == 1 and question['alt2_CIL'] == 1 and question['alt2_CID'] == 0:
-            crowding_text = "Green (LED stripe)"
-        elif question['alt2_CrowdingGreen'] == 1 and question['alt2_CID'] == 1 and question['alt2_CIL'] == 0:
-            crowding_text = "Green (Display)"
-        elif question ['alt2_CrowdingGreen'] == 1 and question['alt2_CID'] == 1 and question['alt2_CIL'] == 1:
-            crowding_text = "Green (Display & LED stripe)"
-        elif (
-            question['alt2_CrowdingGreen'] == 0
-            and question['alt2_CrowdingRed'] == 0
-            and question['alt2_CIL'] == 1
-            and question['alt2_CID'] == 0
-        ):
-            crowding_text = "Yellow (LED stripe)"
-        elif (
-            question['alt2_CrowdingGreen'] == 0
-            and question['alt2_CrowdingRed'] == 0
-            and question['alt2_CID'] == 1
-            and question['alt2_CIL'] == 0
-        ):
-            crowding_text = "Yellow (Display)"
+        st.subheader(f"Door {right_alt}")
+        st.markdown(f"**Walking distance to exit**: {aval(right_alt,'D2E')} m")
+        st.markdown(f"**Walking distance to door**: {aval(right_alt,'D2D')} m")
+        st.markdown(f"**Obstacle**: {'Yes' if aval(right_alt,'O') == 1 else 'No'}")
+        st.markdown(f"**Crowding level at door**: {aval(right_alt,'CD')} persons")
+        st.markdown(f"**In-vehicle crowding**: {crowding_text_for(right_alt)}")
+        st.markdown(f"**Time until train arrival**: {time_recent} minute(s)")
+        st.markdown(
+            f"**Offered discount**:  You pay {ticket_price * (1 - aval(right_alt,'D')/100):.2f} Euros ({aval(right_alt,'D')}% discount)"
+        )
 
-        elif (
-            question['alt2_CrowdingGreen'] == 0
-            and question['alt2_CrowdingRed'] == 0
-            and question['alt2_CID'] == 1
-            and question['alt2_CIL'] == 1
-        ):
-            crowding_text = "Yellow (Display & LED stripe)"
-        else:
-            crowding_text = "No information"  # Fallback, falls keine Bedingung zutrifft
-
-        
-        st.markdown(f"**In-vehicle crowding**: {crowding_text}")
-        time_recent = st.session_state.get("time_recent")
-
-        # Optional: als ganze Minuten formatieren, falls als float übergeben
-        def fmt_minutes(x):
-            return None if x is None else f"{int(round(x))} m"
-
-        
-        time_text = f"{time_recent} minute(s)"
-
-        st.markdown(f"**Time until train arrival**: {time_text}")
-
-        discount_amount_1 = round(ticket_price * question['alt2_D'] / 100, 2)
-        st.markdown(f"**Offered discount**:  You pay {ticket_price * (1 - question['alt2_D']/100):.2f} Euros ({question['alt2_D']}% discount)")
 
     #Option 3: Next train
     st.subheader("Next train")
@@ -489,8 +430,8 @@ elif st.session_state.page == 'survey':
     with st.form(key=f"form_{idx}"):
         st.session_state[f"temp_choice_{idx}"] = st.radio(
             "Which option do you choose?",
-            ("Door A", "Door B", "Next train","None of them"),
-            index=("Door A", "Door B", "Next train","None of them").index(
+            ("Door 1", "Door 2", "Next train","None of them"),
+            index=("Door 1", "Door 2", "Next train","None of them").index(
                 st.session_state[f"temp_choice_{idx}"]
             )
         )
