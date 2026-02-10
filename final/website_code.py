@@ -121,21 +121,20 @@ time_recent = st.session_state.time_recent
 travel_mode = st.session_state.travel_mode
 
 if previous_transfers == "yes_with_change":
-    pt_text = "You had previous transfers and accepted changing your boarding door to receive the discount."
+    pt_text = "You have already made transfers earlier in your trip. You changed doors earlier to receive discounts."
 elif previous_transfers == "no":
-    pt_text = "You did not have previous transfers; this is your first boarding for the trip."
+    pt_text = "You have not made any transfers yet during this trip; this is your first boarding."
 else:
-    pt_text = "You had previous transfers but did not change your boarding door to receive the discount."
+    pt_text = "You have already made transfers earlier in your trip. You did not change your boarding door to receive a discount."
 
 if travel_mode == "alone_backpack":
-    tm_text = "You are traveling alone with a small backpack."
+    tm_text = "🎒 You are traveling alone with a small backpack."
 elif travel_mode == "alone_business":
-    tm_text = "You are traveling alone with a business bag. You have an important meeting to attend."
+    tm_text = "💼 You are traveling alone with a business bag. You have an important meeting to attend."
 else:
-    tm_text = "You are traveling in a group of 6 persons and carrying luggage."
+    tm_text = "👥🧳 You are traveling in a group of 6 persons and carrying luggage."
 
 
-discount_percent = (1 / ticket_price) * 100
 # # Image paths
 # background_path = "Background.png"
 # #door_marker_path = "door_marker.png"
@@ -154,7 +153,7 @@ if st.session_state.page == 'start':
 Dear participant,
 
 Thank you very much for your interest in this study.
-This survey is part of a research project examining how travelers choose where to board public transport vehicles (**subways**).
+This study investigates how travelers choose where to wait on the platform before boarding a subway train.
 
 ---
 
@@ -162,42 +161,35 @@ This survey is part of a research project examining how travelers choose where t
 Please read this short explanation carefully.
 It contains all the information needed to understand the task. 
 
-**Your situation in this experiment:**
-Imagine you are standing on a subway platform and have not yet chosen where to wait for the train.
-Throughout the entire experiment, the following conditions remain the same:
+**Your situation:**
 - {tm_text}
-- Your regular ticket price for this trip is **{ticket_price} Euros**.
-- The total travel time for your trip is **{trip_duration} minutes**.
+- Regular ticket price: **{ticket_price} Euros**.
+- Total trip duration: **{trip_duration} minutes**.
 - {pt_text}
 
-**What you will do:**
-You will answer 12 questions. In each question, you will see a picture that shows three options: Door 1, Door 2, and Next train. 
-Your task is to choose the option you would prefer. If none of the options is suitable, you may select “None of them”.
-There are no right or wrong answers; we are interested in you personal preferences. 
-
-**Understanding the door information:** 
-
-The picture shows a train on the platform. In the given scenario, the train has not yet arrived, and you are choosing your waiting position. The shown train only helps you see where the doors are located.  
+**Your task:**
+You will complete 12 choice tasks. Each task shows Door 1, Door 2, and Next train. You are choosing where to wait on the platform — and thus which door you will board — before the train arrives.
+Please select the option you prefer (or “None of these options” if none is suitable).
+There are no right or wrong answers.
 
 
-For each door, you will see the following details:
-- **Walking distance to exit**: How far this door location is from the nearest exit at your destination station.
-- **Walking distance to door**: How far you must walk on the platform to reach this door location.
-- **Obstacle**: Whether something blocks your way (for example, a cleaning trolley).
-- **Crowding level at door**: How many people are already waiting at this door location.
-- **In-vehicle crowding**: How crowded the train is expected to be inside this door. This may be represented by colors (green = low, yellow = medium, red = high) and may appear as LED lights on the ground or on the display above the platform. 
-- **Time until train arrival**: How long it will take until the train arrives. 
-- **Offered discount**: A reduction from the regular ticket price when boarding through this door. For example, your regular ticket fare is {ticket_price} Euro and a discount of {discount_percent:.0f}% is applied, the final price you pay is {ticket_price * (1 - discount_percent/100):.2f} Euros.
+**Information for each door:** 
+
+Each door may differ in:
+- **Walking distance to exit** — Distance from this door to the nearest exit at the destination station.
+- **Walking distance to door** — Distance you need to walk on the platform to reach this door.
+- **Obstacle** — Whether something blocks your path to this door.
+- **Crowding at door** — Number of people waiting at this door location.
+- **In-vehicle crowding** — Expected crowding inside the train near this door (green = low, yellow = medium, red = high; shown via LED or display).
+- **Time until train arrival** — Waiting time until the train arrives.
+- **Offered discount** — Percentage reduction of the ticket price when boarding at this door.
 
 
+The Next train option means skipping the upcoming train and waiting for the following one.
+For this option, only the time until the next train arrives is shown.
 
-The Next train option means you would skip the upcoming train and wait for the following train.
-For the Next train option, you will only see:
-- **Time until train arrival (following train)**
 
-You should use all of this information to decide which option you prefer.
-
-**Examples of what you will see:** """)
+**Examples:** """)
     example_fig_path = os.path.join(BASE_DIR, "Figures", "rectangle_exp.png")
     st.image(
         example_fig_path,
@@ -344,7 +336,7 @@ elif st.session_state.page == 'survey':
 
     question = questions.iloc[idx]
 
-    st.markdown(f"### Question {idx+1} of {total_questions}: Which option do you choose?")
+    st.markdown(f"### Question {idx+1} of {total_questions}: Which option do you prefer?")
 
     #create images
 
@@ -430,8 +422,8 @@ elif st.session_state.page == 'survey':
     with st.form(key=f"form_{idx}"):
         st.session_state[f"temp_choice_{idx}"] = st.radio(
             "Which option do you choose?",
-            ("Door 1", "Door 2", "Next train","None of them"),
-            index=("Door 1", "Door 2", "Next train","None of them").index(
+            ("Door 1", "Door 2", "Next train","None of these options"),
+            index=("Door 1", "Door 2", "Next train","None of these options").index(
                 st.session_state[f"temp_choice_{idx}"]
             )
         )
