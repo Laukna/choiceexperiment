@@ -177,7 +177,7 @@ Please select the option you prefer (or “None of these options” if none is s
 There are no right or wrong answers.
 
 
-**Information for each door:** 
+**Information for each option:** 
 
 Each door may differ in:
 - **Walking distance to exit** — Distance from this door to the nearest exit at the destination station.
@@ -192,7 +192,7 @@ Each door may differ in:
 The Next train option means skipping the upcoming train and waiting for the following one.
 For this option, the following information is shown:
 - **Time until train arrival** — Waiting time until the train arrives. 
-- ** Offered discount** — Percentage reduction of the ticket price when boarding at this door.
+- **Offered discount** — Percentage reduction of the ticket price when boarding at this door.
 
 
 **Examples:** """)
