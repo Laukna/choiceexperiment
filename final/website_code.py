@@ -156,50 +156,54 @@ if st.session_state.page == 'start':
     st.markdown(f"""
 Dear participant,
 
-Thank you very much for your interest in this study.
-This study investigates how travelers choose where to wait on the platform before boarding a subway train.
+In this study, you will make a series of choices about where to position yourself on a train platform before boarding.
+Please imagine yourself in the situation described below and make your decisions as you would in a comparable real-life situation.
+There are no correct or incorrect answers.
 
 ---
 
-**Before you start:**
-Please read this short explanation carefully.
-It contains all the information needed to understand the task. 
-
 **Your situation:**
+For all choice tasks, assume the following:
 - {tm_text}
-- Regular ticket price: **{ticket_price} Euros**.
-- Total trip duration: **{trip_duration} minutes**.
+- 💰 Regular ticket price: **{ticket_price} €**.
+- ⌛️ Total trip duration: **{trip_duration} minutes**.
 - {pt_text}
+These conditions remain the same throughout the experiment.
 
-**Your task:**
-You will complete 12 choice tasks. Each task shows Door L, Door R, and Next train. You are choosing where to wait on the platform — and thus which door you will board — before the train arrives.
-Please select the option you prefer (or “None of these options” if none is suitable).
-There are no right or wrong answers.
+---
 
+**Decision task:**
+Each choice situation presents four possible responses:
+- Door L
+- Door R
+- Next train
+- None of these options 
+You decide where to wait on the platform before the train arrives.
+Selecting a door implies boarding at that location.
+Selecting “Next train” means skipping the upcoming train and waiting for the following one.
+Selecting “None of these options” indicates that you would not choose any of the presented alternatives in this situation.
 
-**Information for each option:** 
+---
 
-Each door may differ in:
+**Information provided:** 
+Each alternative is described by several characteristics that may vary between options:
 - **Walking distance to exit** — Distance from this door to the nearest exit at the destination station.
-- **Walking distance to door** — Distance you need to walk on the platform to reach this door.
-- **Obstacle** — Whether something blocks your path to this door.
+- **Walking distance to door** — Distance you walk on the platform to reach this door.
+- **Obstacle** — Whether something blocks your path.
 - **Crowding at door** — Number of people waiting at this door location.
-- **In-vehicle crowding** — Expected crowding inside the train near this door (green = low, yellow = medium, red = high; shown via LED or display).
+- **In-vehicle crowding** — Expected crowding levels inside the train near this door (green = low, yellow = medium, red = high, gray = no information). Information may be provided via platform display, LED indicators, or both.
 - **Time until train arrival** — Waiting time until the train arrives.
 - **Offered discount** — Percentage reduction of the ticket price when boarding at this door.
 
-
-The Next train option means skipping the upcoming train and waiting for the following one.
-For this option, the following information is shown:
-- **Time until train arrival** — Waiting time until the train arrives. 
-- **Offered discount** — Percentage reduction of the ticket price when boarding at this door.
-
+---
+**Instructions:** 
+Please review all information shown for each option and select the alternative you prefer based on your own judgment.
 
 **Examples:** """)
     example_fig_path = os.path.join(BASE_DIR, "Figures", "rectangle_exp.png")
     st.image(
         example_fig_path,
-        caption="Example: Door L, Door R, and the Next train option are shown in one picture. Door locations (L, R) are marked. In-vehicle crowdings are indicated by LED stripes on the ground and on the display. The discount is shown on the mobile phone.",
+        caption="Example illustration showing how options and information are displayed. Door locations (L and R) are marked. The example includes walking distances, obstacles, crowding information, waiting time, and ticket discounts as they may appear in the tasks.",
         width="content"
     )
     
@@ -219,14 +223,15 @@ For this option, the following information is shown:
 
 **Demographic Information:**
 
-At the end of the survey, we will ask a few optional questions about your background (e.g., age group, gender, travel frequency). These help us better interpret the results and remain completely anonymous.
-
+At the end of the survey, you will be asked a few optional demographic questions (e.g., age group, gender, travel frequency). 
+These questions are voluntary and anonymous and are used for research purposes only.
+                
 **Data Protection and Confidentiality:**
 
 - Your participation is entirely voluntary, and you may withdraw at any time without consequences.
-- All data will be collected anonymously and used solely for academic research purposes.
-- No personal information will be recorded.
-- Data storage and processing comply with the General Data Protection Regulation (**GDPR/DSGVO**).
+- All data will be collected anonymously and used solely for academic research purposes. No personal identifiers will be recorded.
+- Data storage and processing follow the requirements of the General Data Protection Regulation (GDPR/DSGVO).
+
 
 **Contact Information:**
 
@@ -321,14 +326,8 @@ By continuing, you confirm that you have read and understood the information pro
 
 elif st.session_state.page == 'survey':
     st.title("Train Door Choice Survey")
-    
-    st.write(f"""
-    Remember: 
-    - {tm_text}
-    - Ticket price: **{ticket_price} Euros**.  
-    - Each door option may offer a discount that will reduce this price.
-    - Total travel time: **{trip_duration} minutes**. 
-    """)
+
+    st.caption(f"{tm_text} | Ticket price: {ticket_price} € | Trip duration: {trip_duration} min")
 
     
     questions = design.copy().reset_index(drop=True)
@@ -402,7 +401,7 @@ elif st.session_state.page == 'survey':
         st.markdown(f"**In-vehicle crowding**: {crowding_text_for(left_alt)}")
         st.markdown(f"**Time until train arrival**: {time_recent} minute(s)")
         st.markdown(
-            f"**Offered discount**:  You pay {ticket_price * (1 - aval(left_alt,'D')/100):.2f} Euros ({aval(left_alt,'D')}% discount)"
+            f"**Offered discount**:  You pay {ticket_price * (1 - aval(left_alt,'D')/100):.2f} € ({aval(left_alt,'D')}% discount)"
         )
     
     with col2:
@@ -414,7 +413,7 @@ elif st.session_state.page == 'survey':
         st.markdown(f"**In-vehicle crowding**: {crowding_text_for(right_alt)}")
         st.markdown(f"**Time until train arrival**: {time_recent} minute(s)")
         st.markdown(
-            f"**Offered discount**:  You pay {ticket_price * (1 - aval(right_alt,'D')/100):.2f} Euros ({aval(right_alt,'D')}% discount)"
+            f"**Offered discount**:  You pay {ticket_price * (1 - aval(right_alt,'D')/100):.2f} € ({aval(right_alt,'D')}% discount)"
         )
 
 
@@ -422,6 +421,12 @@ elif st.session_state.page == 'survey':
     st.subheader("Next train")
     alt3_time = question["alt3_time"]
     st.markdown(f"**Time until train arrival (Next train)**: {alt3_time} minute(s)")
+    alt3_discount = question["alt3_D"]
+    st.markdown(
+    f"**Offered discount**: You pay {ticket_price * (1 - alt3_discount/100):.2f} € ({alt3_discount}% discount)"
+)
+
+
 
     options = ("Door L", "Door R", "Next train","None of these options")
     # Get participant's choice
