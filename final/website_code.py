@@ -132,11 +132,11 @@ else:
     pt_text = "You have already made transfers earlier in your trip. You did not change your boarding door to receive a discount."
 
 if travel_mode == "alone_backpack":
-    tm_text = "🎒 You are traveling alone with a small backpack."
+    tm_text = "You are traveling alone with a small backpack."
 elif travel_mode == "alone_business":
-    tm_text = "💼 You are traveling alone with a business bag. You have an important meeting to attend."
+    tm_text = "You are traveling alone with a business bag. You have an important meeting to attend."
 else:
-    tm_text = "👥🧳 You are traveling in a group of 6 persons and carrying luggage."
+    tm_text = "You are traveling in a group of 6 persons and carrying luggage."
 
 
 # # Image paths
@@ -165,8 +165,8 @@ There are no correct or incorrect answers.
 **Your situation:**
 For all choice tasks, assume the following:
 - {tm_text}
-- 💰 Regular ticket price: **{ticket_price} €**.
-- ⌛️ Total trip duration: **{trip_duration} minutes**.
+- Regular ticket price: **{ticket_price} €**.
+- Total trip duration: **{trip_duration} minutes**.
 - {pt_text}
 These conditions remain the same throughout the experiment.
 
