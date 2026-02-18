@@ -39,6 +39,10 @@ if 'responses' not in st.session_state:
     st.session_state.responses = {}
 if 'demographic_data' not in st.session_state:
     st.session_state.demographic_data = {}
+if "notes_text" not in st.session_state:
+    st.session_state.notes_text = ""
+if "submitted_notes" not in st.session_state:
+    st.session_state.submitted_notes = False
 
 
 @st.cache_data
@@ -75,7 +79,7 @@ def load_scenarios():
     trip_durations = [10, 60]
     ticket_prices = [2.3, 3.8]
     previous_transfers = ["yes_no_change", "yes_with_change", "no"]
-    time_recent_options = [1, 2, 4]
+    time_recent_options = [1, 2]
     travel_mode = ["alone_backpack", "alone_business", "group_luggage"] 
 
     rows = []
@@ -168,7 +172,7 @@ It contains all the information needed to understand the task.
 - {pt_text}
 
 **Your task:**
-You will complete 12 choice tasks. Each task shows Door 1, Door 2, and Next train. You are choosing where to wait on the platform — and thus which door you will board — before the train arrives.
+You will complete 12 choice tasks. Each task shows Door L, Door R, and Next train. You are choosing where to wait on the platform — and thus which door you will board — before the train arrives.
 Please select the option you prefer (or “None of these options” if none is suitable).
 There are no right or wrong answers.
 
@@ -186,14 +190,16 @@ Each door may differ in:
 
 
 The Next train option means skipping the upcoming train and waiting for the following one.
-For this option, only the time until the next train arrives is shown.
+For this option, the following information is shown:
+- **Time until train arrival** — Waiting time until the train arrives. 
+- ** Offered discount** — Percentage reduction of the ticket price when boarding at this door.
 
 
 **Examples:** """)
     example_fig_path = os.path.join(BASE_DIR, "Figures", "rectangle_exp.png")
     st.image(
         example_fig_path,
-        caption="Example: Door 1, Door 2, and the Next train option are shown in one picture; door locations are marked. In-vehicle crowdings are indicated by LED stripes on the ground and on the display. The discount is shown on the mobile phone.",
+        caption="Example: Door L, Door R, and the Next train option are shown in one picture. Door locations (L, R) are marked. In-vehicle crowdings are indicated by LED stripes on the ground and on the display. The discount is shown on the mobile phone.",
         width="content"
     )
     
@@ -322,7 +328,6 @@ elif st.session_state.page == 'survey':
     - Ticket price: **{ticket_price} Euros**.  
     - Each door option may offer a discount that will reduce this price.
     - Total travel time: **{trip_duration} minutes**. 
-    - **Following train** indicates waiting for the next trip, not taking the current one. 
     """)
 
     
@@ -332,7 +337,7 @@ elif st.session_state.page == 'survey':
 
     idx = st.session_state.current_idx
     if f"temp_choice_{idx}" not in st.session_state:
-        st.session_state[f"temp_choice_{idx}"] = st.session_state.responses.get(idx, "Door 1")
+        st.session_state[f"temp_choice_{idx}"] = st.session_state.responses.get(idx, None)
 
     question = questions.iloc[idx]
 
@@ -346,7 +351,7 @@ elif st.session_state.page == 'survey':
     img_path = os.path.join(BASE_DIR, "Figures", f"Folie{img_num}.png")
 
 
-    st.image(img_path, caption="Options Door 1, Door 2, and Next train", use_container_width=True)
+    st.image(img_path, caption="Options Door L, Door R, and Next train", use_container_width=True)
 
     # --- mapping: which alternative is on the LEFT in the image? (bigger D2D = further left) ---
     alt1_left = float(question["alt1_D2D"]) > float(question["alt2_D2D"])
@@ -389,7 +394,7 @@ elif st.session_state.page == 'survey':
     col1, col2 = st.columns(2)
 
     with col1:
-        st.subheader(f"Door {left_alt}")
+        st.subheader("Door L")
         st.markdown(f"**Walking distance to exit**: {aval(left_alt,'D2E')} m")
         st.markdown(f"**Walking distance to door**: {aval(left_alt,'D2D')} m")
         st.markdown(f"**Obstacle**: {'Yes' if aval(left_alt,'O') == 1 else 'No'}")
@@ -401,7 +406,7 @@ elif st.session_state.page == 'survey':
         )
     
     with col2:
-        st.subheader(f"Door {right_alt}")
+        st.subheader("Door R")
         st.markdown(f"**Walking distance to exit**: {aval(right_alt,'D2E')} m")
         st.markdown(f"**Walking distance to door**: {aval(right_alt,'D2D')} m")
         st.markdown(f"**Obstacle**: {'Yes' if aval(right_alt,'O') == 1 else 'No'}")
@@ -418,14 +423,14 @@ elif st.session_state.page == 'survey':
     alt3_time = question["alt3_time"]
     st.markdown(f"**Time until train arrival (Next train)**: {alt3_time} minute(s)")
 
+    options = ("Door L", "Door R", "Next train","None of these options")
     # Get participant's choice
     with st.form(key=f"form_{idx}"):
         st.session_state[f"temp_choice_{idx}"] = st.radio(
             "Which option do you choose?",
-            ("Door 1", "Door 2", "Next train","None of these options"),
-            index=("Door 1", "Door 2", "Next train","None of these options").index(
-                st.session_state[f"temp_choice_{idx}"]
-            )
+            options,
+            index=None if st.session_state[f"temp_choice_{idx}"] is None 
+                else options.index(st.session_state[f"temp_choice_{idx}"])
         )
     
         col_back, col_next = st.columns([1, 5])
@@ -439,8 +444,21 @@ elif st.session_state.page == 'survey':
             st.rerun()
     
         if next_clicked:
-            st.session_state.responses[idx] = st.session_state[f"temp_choice_{idx}"]
-    
+
+            selected = st.session_state[f"temp_choice_{idx}"]
+            if selected is None:
+                st.warning("Please select an option before continuing.")
+                st.stop()
+
+            if selected == "Door L":
+                stored_choice = f"alt{left_alt}"
+            elif selected == "Door R":
+                stored_choice = f"alt{right_alt}"
+            else:
+                stored_choice = selected   # Next train oder None
+
+            st.session_state.responses[idx] = stored_choice
+            
             if idx < total_questions - 1:
                 st.session_state.current_idx += 1
                 st.rerun()
@@ -483,8 +501,57 @@ elif st.session_state.page == 'survey':
                 sheet_responses = get_gsheet().worksheet("Responses")
                 sheet_responses.append_rows(df_responses.values.tolist(), value_input_option="USER_ENTERED")
     
-                st.session_state.page = 'demographics'
+                st.session_state.page = 'notes'
                 st.rerun()
+
+
+elif st.session_state.page == 'notes':
+    st.title("Optional Notes")
+
+    st.write("""
+    You may optionally leave notes here — for example:
+    - assumptions you made because some information was missing,
+    - comments on the task or presentation,
+    - anything you found unclear.
+
+    This is optional. You can also leave it empty and continue.
+    """)
+
+    with st.form("notes_form"):
+        notes_text = st.text_area(
+            "Optional notes",
+            value=st.session_state.notes_text,
+            height=200,
+            placeholder="Type your notes here (optional)..."
+        )
+
+        col_back, col_next = st.columns([1, 5])
+        with col_back:
+            back_clicked = st.form_submit_button("Back")
+        with col_next:
+            next_clicked = st.form_submit_button("Continue")
+
+    if back_clicked:
+        # zurück zur letzten Survey-Seite (Index bleibt unverändert)
+        st.session_state.page = 'survey'
+        st.rerun()
+
+    if next_clicked and not st.session_state.get("submitted_notes", False):
+        st.session_state.notes_text = notes_text
+
+        # In Google Sheet speichern (Worksheet muss existieren: "Notes")
+        notes_df = pd.DataFrame([{
+            "participant_number": counter,
+            "notes": notes_text
+        }])
+
+        sheet_notes = get_gsheet().worksheet("Notes")
+        sheet_notes.append_rows(notes_df.values.tolist(), value_input_option="USER_ENTERED")
+
+        st.session_state.submitted_notes = True
+
+        st.session_state.page = 'demographics'
+        st.rerun()
 
 
 elif st.session_state.page == 'demographics':
