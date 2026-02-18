@@ -633,7 +633,7 @@ elif st.session_state.page == 'end':
     st.markdown("""
     Your responses have been recorded successfully.
 
-    If you have any questions or would like to know more about this research, feel free to contact:
+    If you have any questions or would like to know more about this research, please contact:
 
     Laura Knappik
     
