@@ -178,6 +178,7 @@ Each choice situation presents four possible responses:
 - Door R
 - Next train
 - None of these options 
+
 You decide where to wait on the platform before the train arrives.
 Selecting a door implies boarding at that location.
 Selecting “Next train” means skipping the upcoming train and waiting for the following one.
