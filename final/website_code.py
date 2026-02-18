@@ -178,7 +178,6 @@ Each choice situation presents four possible responses:
 - Door R
 - Next train
 - None of these options 
-
 You decide where to wait on the platform before the train arrives.
 Selecting a door implies boarding at that location.
 Selecting “Next train” means skipping the upcoming train and waiting for the following one.
@@ -565,7 +564,7 @@ elif st.session_state.page == 'demographics':
     st.write("""
 
     To better understand the survey results, we would like to ask you a few additional questions.  
-    Your answers are completely voluntary, anonymous, and will only be used for academic research purposes.
+    These questions are voluntary and anonymous and are used for research purposes only.
     """)
 
     with st.form("demographics_form"):
@@ -637,7 +636,9 @@ elif st.session_state.page == 'end':
     If you have any questions or would like to know more about this research, feel free to contact:
 
     Laura Knappik
+    
     RWTH Aachen University  
+    
     knappik@analytics.rwth-aachen.de
 
     ---
