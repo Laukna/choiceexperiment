@@ -318,7 +318,7 @@ If you have any questions about the study, please contact **Laura Knappik** at *
 
 ---
 
-By continuing, you confirm that you have read and understood the information provided above and agree to participate under these conditions.
+By continuing, you confirm that you are 18+ years old, have read and understood the information provided above and agree to participate under these conditions.
 """)
 
     # --- COMPREHENSION CHECK ---
@@ -748,30 +748,25 @@ elif st.session_state.page == 'notes':
     This is optional. You can also leave it empty and continue.
     """)
 
-    with st.form("notes_form"):
-        notes_text = st.text_area(
-            "Optional notes",
-            value=st.session_state.notes_text,
-            height=200,
-            placeholder="Type your notes here (optional)..."
-        )
-
-        col_back, col_next = st.columns([1, 5])
-        with col_back:
-            back_clicked = st.form_submit_button("Back")
-        with col_next:
-            next_clicked = st.form_submit_button("Submit")
-
-    if back_clicked:
-        # zurück zur letzten Survey-Seite (Index bleibt unverändert)
+    # Back OUTSIDE the form (normal button)
+    if st.button("Back"):
         st.session_state.page = 'demographics'
         st.rerun()
 
-    if next_clicked:
-        if st.session_state.get("final_submitted", False):
-            st.session_state.page = 'end'
-            st.rerun()
+    # Form with a SINGLE submit button
+    with st.form("notes_form"):
+        notes_text = st.text_area(
+            "Optional notes",
+            value=st.session_state.get("notes_text", ""),
+            height=200,
+            placeholder="Type your notes here (optional)...",
+            key="notes_textarea",
+        )
 
+        submitted = st.form_submit_button("Submit")
+
+    if submitted:
+        # Text übernehmen
         st.session_state.notes_text = notes_text
         st.session_state.final_submitted = True
 
@@ -791,7 +786,7 @@ elif st.session_state.page == 'notes':
             }
         )
 
-        # Participants: mark completed (UPSERT) – started_at NICHT verlieren
+        # Participants: mark completed – started_at NICHT verlieren
         ws_part = sheet.worksheet("Participants")
         upsert_row(
             ws_part,
