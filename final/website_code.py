@@ -5,6 +5,11 @@ import json
 import gspread
 from google.oauth2.service_account import Credentials
 from PIL import Image, ImageDraw
+import uuid
+from datetime import datetime, timezone
+from gspread.utils import rowcol_to_a1
+import hashlib
+
 
 # Base directory for relative assets (folder containing this script)
 BASE_DIR = os.path.dirname(__file__)
@@ -28,6 +33,56 @@ def get_gsheet():
     return gc.open_by_key(credentials_dict["gsheet_key"])
 
 
+def find_row_by_keys(ws, header, key_cols, key_vals):
+    # Build column indices
+    col_idx = {name: i + 1 for i, name in enumerate(header)}
+    key_col_indices = [col_idx[c] for c in key_cols]
+
+    # Read only key columns (excluding header)
+    # Note: get_all_values can be heavy; for moderate sheet sizes it's ok.
+    data = ws.get_all_values()
+    if not data:
+        return None
+    rows = data[1:]  # skip header
+    for i, r in enumerate(rows, start=2):  # actual sheet row number
+        ok = True
+        for kc_i, kv in zip(key_col_indices, key_vals):
+            cell = r[kc_i - 1] if kc_i - 1 < len(r) else ""
+            if str(cell) != str(kv):
+                ok = False
+                break
+        if ok:
+            return i
+    return None
+
+
+def upsert_row(ws, key_cols, key_vals, row_dict):
+
+    data = ws.get_all_values()
+    if not data:
+        raise ValueError(f"Worksheet {ws.title} has no header row.")
+    header = data[0]
+
+    # Ensure all columns exist
+    missing = [c for c in row_dict.keys() if c not in header]
+    if missing:
+        raise ValueError(f"Missing columns in {ws.title}: {missing}")
+
+    # Prepare full row in header order
+    full_row = [row_dict.get(col, "") for col in header]
+
+    row_idx = find_row_by_keys(ws, header, key_cols, key_vals)
+    if row_idx is None:
+        ws.append_row(full_row, value_input_option="USER_ENTERED")
+    else:
+        # Update the entire row range (A..lastcol)
+        start = rowcol_to_a1(row_idx, 1)
+        end = rowcol_to_a1(row_idx, len(header))
+        ws.update(f"{start}:{end}", [full_row])
+
+def now_utc_iso():
+    return datetime.now(timezone.utc).isoformat()
+
 # --- SETUP ---
 
 # Initialize session state variables
@@ -43,6 +98,12 @@ if "notes_text" not in st.session_state:
     st.session_state.notes_text = ""
 if "submitted_notes" not in st.session_state:
     st.session_state.submitted_notes = False
+if "final_submitted" not in st.session_state:
+    st.session_state.final_submitted = False
+if "participant_id" not in st.session_state:
+    st.session_state.participant_id = str(uuid.uuid4())
+if "started_at" not in st.session_state:
+    st.session_state.started_at = None
 
 
 @st.cache_data
@@ -54,16 +115,24 @@ design = load_design()
 
 
 # Get participant counter from Google Sheet
-if 'counter' not in st.session_state:
-    sheet_meta = get_gsheet().worksheet("Meta")
-    counter_cell = sheet_meta.acell("A1").value
-    st.session_state.counter = int(counter_cell)
+# if 'counter' not in st.session_state:
+#     sheet_meta = get_gsheet().worksheet("Meta")
+#     counter_cell = sheet_meta.acell("A1").value
+#     st.session_state.counter = int(counter_cell)
 
-counter = st.session_state.counter
+# counter = st.session_state.counter
 
-#Split choice sets into two groups 
+# #Split choice sets into two groups 
+# if 'cs_group' not in st.session_state:
+#     st.session_state.cs_group = 'A' if counter % 2 == 1 else 'B'
+
+# cs_group = st.session_state.cs_group
+
+pid = st.session_state.participant_id
+pid_int = int(hashlib.md5(pid.encode("utf-8")).hexdigest(), 16)
+
 if 'cs_group' not in st.session_state:
-    st.session_state.cs_group = 'A' if counter % 2 == 1 else 'B'
+    st.session_state.cs_group = 'A' if (pid_int % 2 == 0) else 'B'
 
 cs_group = st.session_state.cs_group
 
@@ -107,7 +176,7 @@ scenarios = load_scenarios()
 n_scenarios = len(scenarios)
 
 # Zuweisung: rotiert deterministisch durch alle 72 Szenarien
-scenario_idx = (counter - 1) % n_scenarios
+scenario_idx = pid_int % n_scenarios
 scenario = scenarios.iloc[scenario_idx]
 
 # In Session State speichern: bleibt für alle Choice Sets dieses Teilnehmenden gleich
@@ -156,7 +225,7 @@ if st.session_state.page == 'start':
     st.markdown(f"""
 Dear participant,
 
-In this study, you will make a series of choices about where to position yourself on a train platform before boarding.
+In this study, you will complete a series of choice tasks in which you select the boarding door you would use to board a subway train.
 Please imagine yourself in the situation described below and make your decisions as you would in a comparable real-life situation.
 There are no correct or incorrect answers.
 
@@ -168,6 +237,7 @@ For all choice tasks, assume the following:
 - Regular ticket price: **{ticket_price} €**.
 - Total trip duration: **{trip_duration} minutes**.
 - {pt_text}
+- Your (upcoming) train will depart in **{time_recent} minutes**.
 
 These conditions remain the same throughout the experiment.
 
@@ -180,7 +250,7 @@ Each choice situation presents four possible responses:
 - Next train
 - None of these options 
 
-You decide where to wait on the platform before the train arrives.
+You choose which door to use for boarding the subway train. 
 Selecting a door implies boarding at that location.
 Selecting “Next train” means skipping the upcoming train and waiting for the following one.
 Selecting “None of these options” indicates that you would not choose any of the presented alternatives in this situation.
@@ -194,7 +264,6 @@ Each alternative is described by several attributes that may vary between option
 - **Obstacle** — Whether something blocks your shortest path to this door.
 - **Crowding at door** — Number of people waiting at this door location.
 - **In-vehicle crowding** — Expected crowding levels inside the train near this door (green = low, yellow = medium, red = high, gray = no information). Information may be provided via platform display, LED indicators, or both.
-- **Time until train arrival** — Waiting time until the train arrives.
 - **Offered discount** — Percentage reduction of the ticket price when boarding at this door.
 
 ---
@@ -213,6 +282,13 @@ Please review all information shown for each option and select the alternative y
     st.image(
         crowding_real_fig_path,
         caption="Real-world: In-vehicle crowding information shown via LED and display. ",
+        width="content"
+    )
+
+    crowding_exp_fig_path = os.path.join(BASE_DIR, "Figures", "example_invehicle.png")
+    st.image(
+        crowding_exp_fig_path,
+        caption="In-vehicle crowding information is communicated via alternative information channels (LED guidance or platform display). In this example, Door L shows green crowding information via LED guidance, while no information is provided via the display (gray indicates absence of information).",
         width="content"
     )
 
@@ -317,10 +393,33 @@ By continuing, you confirm that you have read and understood the information pro
     
     # --- Conditional start button ---
     if st.session_state.get("allow_start", False) and st.button("Start Survey"):
+
+        pid = st.session_state.participant_id
+        if st.session_state.started_at is None:
+            st.session_state.started_at = now_utc_iso()
+
+        sheet = get_gsheet()
+        ws_part = sheet.worksheet("Participants")
+
+        upsert_row(
+            ws_part,
+            key_cols=["participant_id"],
+            key_vals=[pid],
+            row_dict={
+                "participant_id": pid,
+                "started_at": st.session_state.started_at,
+                "finished_at": "",
+                "status": "started",
+                "cs_group": st.session_state.cs_group,
+                "scenario_id": st.session_state.scenario_id,
+                "updated_at": now_utc_iso(),
+            }
+        )
+
         st.session_state.page = 'survey'
-        st.session_state.current_idx = 0  # reset index
+        st.session_state.current_idx = 0
         st.rerun()
-    
+
 
 
 
@@ -329,7 +428,7 @@ By continuing, you confirm that you have read and understood the information pro
 elif st.session_state.page == 'survey':
     st.title("Train Door Choice Survey")
 
-    st.caption(f"{tm_text} | Ticket price: {ticket_price} € | Trip duration: {trip_duration} min")
+    st.caption(f"{tm_text} | Ticket price: {ticket_price} € | Trip duration: {trip_duration} min | Departure time: {time_recent} min")  
 
     
     questions = design.copy().reset_index(drop=True)
@@ -401,7 +500,6 @@ elif st.session_state.page == 'survey':
         st.markdown(f"**Obstacle**: {'Yes' if aval(left_alt,'O') == 1 else 'No'}")
         st.markdown(f"**Crowding level at door**: {aval(left_alt,'CD')} persons")
         st.markdown(f"**In-vehicle crowding**: {crowding_text_for(left_alt)}")
-        st.markdown(f"**Time until train arrival**: {time_recent} minute(s)")
         st.markdown(
             f"**Offered discount**:  You pay {ticket_price * (1 - aval(left_alt,'D')/100):.2f} € ({aval(left_alt,'D')}% discount)"
         )
@@ -413,7 +511,6 @@ elif st.session_state.page == 'survey':
         st.markdown(f"**Obstacle**: {'Yes' if aval(right_alt,'O') == 1 else 'No'}")
         st.markdown(f"**Crowding level at door**: {aval(right_alt,'CD')} persons")
         st.markdown(f"**In-vehicle crowding**: {crowding_text_for(right_alt)}")
-        st.markdown(f"**Time until train arrival**: {time_recent} minute(s)")
         st.markdown(
             f"**Offered discount**:  You pay {ticket_price * (1 - aval(right_alt,'D')/100):.2f} € ({aval(right_alt,'D')}% discount)"
         )
@@ -444,7 +541,7 @@ elif st.session_state.page == 'survey':
         with col_back:
             back_clicked = st.form_submit_button("Back")
         with col_next:
-            next_clicked = st.form_submit_button("Next" if idx < total_questions - 1 else "Submit Survey")
+            next_clicked = st.form_submit_button("Next" if idx < total_questions - 1 else "Continue")
     
         if back_clicked and idx > 0:
             st.session_state.current_idx -= 1
@@ -465,52 +562,179 @@ elif st.session_state.page == 'survey':
                 stored_choice = selected   # Next train oder None
 
             st.session_state.responses[idx] = stored_choice
+
+            pid = st.session_state.participant_id
+            cs = int(question["CS"])
+
+            sheet = get_gsheet()
+            ws_resp = sheet.worksheet("Responses")
+
+            upsert_row(
+                ws_resp,
+                key_cols=["participant_id", "CS"],
+                key_vals=[pid, cs],
+                row_dict={
+                    "participant_id": pid,
+                    "CS": cs,
+                    "choice_set_in_block": idx + 1,
+                    "choice": stored_choice,
+                    "updated_at": now_utc_iso(),
+
+                    # Kontext (wie bisher)
+                    "ticket_price": st.session_state.ticket_price,
+                    "trip_duration": st.session_state.trip_duration,
+                    "previous_transfers": st.session_state.previous_transfers,
+                    "time_recent": st.session_state.time_recent,
+                    "travel_mode": st.session_state.travel_mode,
+
+                    # OPTIONAL: wenn Sie Attribute mitspeichern wollen
+                    "alt1_D2E": question["alt1_D2E"],
+                    "alt1_D2D": question["alt1_D2D"],
+                    "alt1_O": question["alt1_O"],
+                    "alt1_CD": question["alt1_CD"],
+                    "alt1_CrowdingRed": question["alt1_CrowdingRed"],
+                    "alt1_CrowdingGreen": question["alt1_CrowdingGreen"],
+                    "alt1_CIL": question["alt1_CIL"],
+                    "alt1_CID": question["alt1_CID"],
+                    "alt1_D": question["alt1_D"],
+                    "alt2_D2E": question["alt2_D2E"],
+                    "alt2_D2D": question["alt2_D2D"],
+                    "alt2_O": question["alt2_O"],
+                    "alt2_CD": question["alt2_CD"],
+                    "alt2_CrowdingRed": question["alt2_CrowdingRed"],
+                    "alt2_CrowdingGreen": question["alt2_CrowdingGreen"],
+                    "alt2_CIL": question["alt2_CIL"],
+                    "alt2_CID": question["alt2_CID"],
+                    "alt2_D": question["alt2_D"],
+                    "alt3_time": question["alt3_time"],
+                    "alt3_D": question.get("alt3_D", ""),
+                }
+            )
             
             if idx < total_questions - 1:
                 st.session_state.current_idx += 1
                 st.rerun()
             else:
                 # Create DataFrame from responses
-                df_responses = pd.DataFrame([
-                    {
-                        'participant_number': counter,
-                        'ticket_price': st.session_state.ticket_price,
-                        'trip_duration': st.session_state.trip_duration,
-                        'previous_transfers' : st.session_state.previous_transfers,
-                        'time_recent' : st.session_state.time_recent,
-                        'travel_mode' : st.session_state.travel_mode,
-                        'CS': int(questions.iloc[i]['CS']),
-                        'choice_set_in_block': i + 1,
-                        'choice': st.session_state.responses[i],
-                        'alt1_D2E': questions.iloc[i]['alt1_D2E'],
-                        'alt1_D2D': questions.iloc[i]['alt1_D2D'],
-                        'alt1_O': questions.iloc[i]['alt1_O'],
-                        'alt1_CD': questions.iloc[i]['alt1_CD'],
-                        'alt1_CrowdingRed': questions.iloc[i]['alt1_CrowdingRed'],
-                        'alt1_CrowdingGreen': questions.iloc[i]['alt1_CrowdingGreen'],
-                        'alt1_CIL': questions.iloc[i]['alt1_CIL'],
-                        'alt1_CID': questions.iloc[i]['alt1_CID'],
-                        'alt1_D': questions.iloc[i]['alt1_D'],      
-                        'alt2_D2E': questions.iloc[i]['alt2_D2E'],
-                        'alt2_D2D': questions.iloc[i]['alt2_D2D'],
-                        'alt2_O': questions.iloc[i]['alt2_O'],
-                        'alt2_CD': questions.iloc[i]['alt2_CD'],
-                        'alt2_CrowdingRed': questions.iloc[i]['alt2_CrowdingRed'],
-                        'alt2_CrowdingGreen': questions.iloc[i]['alt2_CrowdingGreen'],
-                        'alt2_CIL': questions.iloc[i]['alt2_CIL'],
-                        'alt2_CID': questions.iloc[i]['alt2_CID'],
-                        'alt2_D': questions.iloc[i]['alt2_D'],
-                        'alt3_time': questions.iloc[i]['alt3_time']
-                    }
-                    for i in range(total_questions)
-                ])
+                # df_responses = pd.DataFrame([
+                #     {
+                #         'participant_number': counter,
+                #         'ticket_price': st.session_state.ticket_price,
+                #         'trip_duration': st.session_state.trip_duration,
+                #         'previous_transfers' : st.session_state.previous_transfers,
+                #         'time_recent' : st.session_state.time_recent,
+                #         'travel_mode' : st.session_state.travel_mode,
+                #         'CS': int(questions.iloc[i]['CS']),
+                #         'choice_set_in_block': i + 1,
+                #         'choice': st.session_state.responses[i],
+                #         'alt1_D2E': questions.iloc[i]['alt1_D2E'],
+                #         'alt1_D2D': questions.iloc[i]['alt1_D2D'],
+                #         'alt1_O': questions.iloc[i]['alt1_O'],
+                #         'alt1_CD': questions.iloc[i]['alt1_CD'],
+                #         'alt1_CrowdingRed': questions.iloc[i]['alt1_CrowdingRed'],
+                #         'alt1_CrowdingGreen': questions.iloc[i]['alt1_CrowdingGreen'],
+                #         'alt1_CIL': questions.iloc[i]['alt1_CIL'],
+                #         'alt1_CID': questions.iloc[i]['alt1_CID'],
+                #         'alt1_D': questions.iloc[i]['alt1_D'],      
+                #         'alt2_D2E': questions.iloc[i]['alt2_D2E'],
+                #         'alt2_D2D': questions.iloc[i]['alt2_D2D'],
+                #         'alt2_O': questions.iloc[i]['alt2_O'],
+                #         'alt2_CD': questions.iloc[i]['alt2_CD'],
+                #         'alt2_CrowdingRed': questions.iloc[i]['alt2_CrowdingRed'],
+                #         'alt2_CrowdingGreen': questions.iloc[i]['alt2_CrowdingGreen'],
+                #         'alt2_CIL': questions.iloc[i]['alt2_CIL'],
+                #         'alt2_CID': questions.iloc[i]['alt2_CID'],
+                #         'alt2_D': questions.iloc[i]['alt2_D'],
+                #         'alt3_time': questions.iloc[i]['alt3_time']
+                #     }
+                #     for i in range(total_questions)
+                # ])
     
-                sheet_responses = get_gsheet().worksheet("Responses")
-                sheet_responses.append_rows(df_responses.values.tolist(), value_input_option="USER_ENTERED")
+                # sheet_responses = get_gsheet().worksheet("Responses")
+                # sheet_responses.append_rows(df_responses.values.tolist(), value_input_option="USER_ENTERED")
     
                 st.session_state.page = 'demographics'
                 st.rerun()
 
+
+
+
+elif st.session_state.page == 'demographics':
+    st.title("A Few More Questions")
+    st.write("""
+
+    To better understand the survey results, we would like to ask you a few additional questions.  
+    These questions are voluntary and anonymous and are used for research purposes only.
+    """)
+
+    with st.form("demographics_form"):
+        age = st.selectbox(
+            "What is your age group?",
+            ["Prefer not to say", "18–25","26-30", "31–35","36-40", "41-45","46-50","51–55", "56-60", "61–65","66-70", "71+"], key="demo_age"
+        )
+
+
+        gender = st.selectbox(
+            "What is your gender?",
+            ["Prefer not to say", "Female", "Male", "Diverse"], key="demo_gender"
+        )
+
+        travel_freq = st.selectbox(
+            "How often have you approximately traveled by **train** in the last 12 months?",
+            ["Prefer not to say", "Never", "1x per day", "1x per week", "1x per month", "1x per year"], key="demo_trainfq"
+        )
+
+        travel_freq_1 = st.selectbox(
+            "How often have you approximately traveled by ***subway*** in the last 12 months?",
+            ["Prefer not to say", "Never", "1x per day", "1x per week", "1x per month", "1x per year"], key="demo_subwayfq"
+        )
+
+        mobility = st.select_slider(
+            "How would you assess your mobility?",
+            options=[
+                "Prefer not to say",
+                "0 - No problems",
+                "1 - Minor limitations",
+                "2 - Moderate limitations",
+                "3 - Severe limitations",
+                "4 - Unstable / Handicapped"
+            ], key="demo_mobility"
+        )
+
+        col_back, col_submit = st.columns([1, 5])
+        with col_back:
+            back_clicked = st.form_submit_button("Back")
+        with col_submit:
+            submitted = st.form_submit_button("Continue")
+
+    if back_clicked:
+        st.session_state.page = 'survey'
+        st.rerun()
+        # Make sure this is at the same level as the other inputs
+        #submitted = st.form_submit_button("Submit Demographic Data")
+
+    if submitted:
+        pid = st.session_state.participant_id
+        sheet = get_gsheet()
+        ws_demo = sheet.worksheet("Demographics")
+
+        upsert_row(
+            ws_demo,
+            key_cols=["participant_id"],
+            key_vals=[pid],
+            row_dict={
+                "participant_id": pid,
+                "age": st.session_state.get("demo_age", "Prefer not to say"),
+                "gender": st.session_state.get("demo_gender", "Prefer not to say"),
+                "travel_frequency": st.session_state.get("demo_trainfq", "Prefer not to say"),
+                "ubahn_frequency": st.session_state.get("demo_subwayfq", "Prefer not to say"),
+                "mobility": st.session_state.get("demo_mobility", "Prefer not to say"),
+                "updated_at": now_utc_iso(),
+            }
+        )
+
+        st.session_state.page = 'notes'
+        st.rerun()
 
 elif st.session_state.page == 'notes':
     st.title("Optional Notes")
@@ -536,98 +760,57 @@ elif st.session_state.page == 'notes':
         with col_back:
             back_clicked = st.form_submit_button("Back")
         with col_next:
-            next_clicked = st.form_submit_button("Continue")
+            next_clicked = st.form_submit_button("Submit")
 
     if back_clicked:
         # zurück zur letzten Survey-Seite (Index bleibt unverändert)
-        st.session_state.page = 'survey'
+        st.session_state.page = 'demographics'
         st.rerun()
 
-    if next_clicked and not st.session_state.get("submitted_notes", False):
+    if next_clicked:
+        if st.session_state.get("final_submitted", False):
+            st.session_state.page = 'end'
+            st.rerun()
+
         st.session_state.notes_text = notes_text
+        st.session_state.final_submitted = True
 
-        # In Google Sheet speichern (Worksheet muss existieren: "Notes")
-        notes_df = pd.DataFrame([{
-            "participant_number": counter,
-            "notes": notes_text
-        }])
+        pid = st.session_state.participant_id
+        sheet = get_gsheet()
 
-        sheet_notes = get_gsheet().worksheet("Notes")
-        sheet_notes.append_rows(notes_df.values.tolist(), value_input_option="USER_ENTERED")
+        # Notes UPSERT
+        ws_notes = sheet.worksheet("Notes")
+        upsert_row(
+            ws_notes,
+            key_cols=["participant_id"],
+            key_vals=[pid],
+            row_dict={
+                "participant_id": pid,
+                "notes": st.session_state.notes_text,
+                "updated_at": now_utc_iso(),
+            }
+        )
 
-        st.session_state.submitted_notes = True
+        # Participants: mark completed (UPSERT) – started_at NICHT verlieren
+        ws_part = sheet.worksheet("Participants")
+        upsert_row(
+            ws_part,
+            key_cols=["participant_id"],
+            key_vals=[pid],
+            row_dict={
+                "participant_id": pid,
+                "started_at": st.session_state.started_at or "",
+                "finished_at": now_utc_iso(),
+                "status": "completed",
+                "cs_group": st.session_state.cs_group,
+                "scenario_id": st.session_state.scenario_id,
+                "updated_at": now_utc_iso(),
+            }
+        )
 
         st.session_state.page = 'end'
         st.rerun()
 
-
-elif st.session_state.page == 'demographics':
-    st.title("A Few More Questions")
-    st.write("""
-
-    To better understand the survey results, we would like to ask you a few additional questions.  
-    These questions are voluntary and anonymous and are used for research purposes only.
-    """)
-
-    with st.form("demographics_form"):
-        age = st.selectbox(
-            "What is your age group?",
-            ["Prefer not to say", "18–25","26-30", "31–35","36-40", "41-45","46-50","51–55", "56-60", "61–65","66-70", "71+"]
-        )
-
-
-        gender = st.selectbox(
-            "What is your gender?",
-            ["Prefer not to say", "Female", "Male", "Diverse"]
-        )
-
-        travel_freq = st.selectbox(
-            "How often have you approximately traveled by **train** in the last 12 months?",
-            ["Prefer not to say", "Never", "1x per day", "1x per week", "1x per month", "1x per year"]
-        )
-
-        travel_freq_1 = st.selectbox(
-            "How often have you approximately traveled by ***subway*** in the last 12 months?",
-            ["Prefer not to say", "Never", "1x per day", "1x per week", "1x per month", "1x per year"]
-        )
-
-        mobility = st.select_slider(
-            "How would you assess your mobility?",
-            options=[
-                "Prefer not to say",
-                "0 - No problems",
-                "1 - Minor limitations",
-                "2 - Moderate limitations",
-                "3 - Severe limitations",
-                "4 - Unstable / Handicapped"
-            ]
-        )
-
-        # Make sure this is at the same level as the other inputs
-        submitted = st.form_submit_button("Submit Demographic Data")
-
-    if submitted and not st.session_state.get("submitted_demo", False):
-    # Save demographic data
-        demographic_response = pd.DataFrame([{
-            'participant_number': counter,
-            'age': age,
-            'gender': gender,
-            'travel_frequency': travel_freq,
-            'ubahn_frequency': travel_freq_1,
-            'mobility': mobility
-        }])
-    
-        sheet_demo = get_gsheet().worksheet("Demographics")
-        sheet_demo.append_rows(demographic_response.values.tolist(), value_input_option="USER_ENTERED")
-    
-        sheet_meta = get_gsheet().worksheet("Meta")
-        sheet_meta.update("A1", [[str(counter + 1)]])
-
-        
-        st.session_state.submitted_demo = True  # prevent further submissions
-    
-        st.session_state.page = 'notes'
-        st.rerun()
 
 elif st.session_state.page == 'end':
     st.title("Thank You for Your Participation!")
