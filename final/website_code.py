@@ -574,7 +574,7 @@ elif st.session_state.page == 'survey':
                 key_cols=["participant_id", "CS"],
                 key_vals=[pid, cs],
                 row_dict={
-                    "participant_id": int(pid),
+                    "participant_id": pid,
                     "CS": int(cs),
                     "choice_set_in_block": int(idx + 1),
                     "choice": stored_choice,
