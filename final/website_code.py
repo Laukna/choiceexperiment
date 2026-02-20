@@ -168,6 +168,7 @@ For all choice tasks, assume the following:
 - Regular ticket price: **{ticket_price} €**.
 - Total trip duration: **{trip_duration} minutes**.
 - {pt_text}
+
 These conditions remain the same throughout the experiment.
 
 ---
@@ -178,6 +179,7 @@ Each choice situation presents four possible responses:
 - Door R
 - Next train
 - None of these options 
+
 You decide where to wait on the platform before the train arrives.
 Selecting a door implies boarding at that location.
 Selecting “Next train” means skipping the upcoming train and waiting for the following one.
@@ -186,10 +188,10 @@ Selecting “None of these options” indicates that you would not choose any of
 ---
 
 **Information provided:** 
-Each alternative is described by several characteristics that may vary between options:
+Each alternative is described by several attributes that may vary between options:
 - **Walking distance to exit** — Distance from this door to the nearest exit at the destination station.
 - **Walking distance to door** — Distance you walk on the platform to reach this door.
-- **Obstacle** — Whether something blocks your path.
+- **Obstacle** — Whether something blocks your shortest path to this door.
 - **Crowding at door** — Number of people waiting at this door location.
 - **In-vehicle crowding** — Expected crowding levels inside the train near this door (green = low, yellow = medium, red = high, gray = no information). Information may be provided via platform display, LED indicators, or both.
 - **Time until train arrival** — Waiting time until the train arrives.
@@ -203,7 +205,7 @@ Please review all information shown for each option and select the alternative y
     example_fig_path = os.path.join(BASE_DIR, "Figures", "rectangle_exp.png")
     st.image(
         example_fig_path,
-        caption="Example illustration showing how options and information are displayed. Door locations (L and R) are marked. The example includes walking distances, obstacles, crowding information, waiting time, and ticket discounts as they may appear in the tasks.",
+        caption="Example illustration showing how options and information are displayed. Door locations (L and R) are marked. The example includes obstacles, crowding information, waiting time, and ticket discounts as they may appear in the tasks.",
         width="content"
     )
     
@@ -506,7 +508,7 @@ elif st.session_state.page == 'survey':
                 sheet_responses = get_gsheet().worksheet("Responses")
                 sheet_responses.append_rows(df_responses.values.tolist(), value_input_option="USER_ENTERED")
     
-                st.session_state.page = 'notes'
+                st.session_state.page = 'demographics'
                 st.rerun()
 
 
@@ -555,7 +557,7 @@ elif st.session_state.page == 'notes':
 
         st.session_state.submitted_notes = True
 
-        st.session_state.page = 'demographics'
+        st.session_state.page = 'end'
         st.rerun()
 
 
@@ -624,7 +626,7 @@ elif st.session_state.page == 'demographics':
         
         st.session_state.submitted_demo = True  # prevent further submissions
     
-        st.session_state.page = 'end'
+        st.session_state.page = 'notes'
         st.rerun()
 
 elif st.session_state.page == 'end':
