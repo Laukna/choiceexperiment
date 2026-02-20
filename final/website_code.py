@@ -545,7 +545,7 @@ elif st.session_state.page == 'survey':
     
         if back_clicked and idx > 0:
             st.session_state.current_idx -= 1
-            st.rerun()
+            #st.rerun()
     
         if next_clicked:
 
@@ -613,7 +613,7 @@ elif st.session_state.page == 'survey':
             
             if idx < total_questions - 1:
                 st.session_state.current_idx += 1
-                st.rerun()
+                #st.rerun()
             else:
                 # Create DataFrame from responses
                 # df_responses = pd.DataFrame([
@@ -654,7 +654,7 @@ elif st.session_state.page == 'survey':
                 # sheet_responses.append_rows(df_responses.values.tolist(), value_input_option="USER_ENTERED")
     
                 st.session_state.page = 'demographics'
-                st.rerun()
+                #st.rerun()
 
 
 
