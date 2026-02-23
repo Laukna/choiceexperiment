@@ -261,7 +261,7 @@ Selecting “None of these options” indicates that you would not choose any of
 Each alternative is described by several attributes that may vary between options:
 - **Walking distance to exit** — Distance from this door to the nearest exit at the destination station.
 - **Walking distance to door** — Distance you walk on the platform to reach this door.
-- **Obstacle** — Whether something blocks your shortest path to this door.
+- **Crowding at platform** — Whether crowds of people are on the platform.
 - **Crowding at door** — Number of people waiting at this door location.
 - **In-vehicle crowding** — Expected crowding levels inside the train near this door (green = low, yellow = medium, red = high, gray = no information). Information may be provided via platform display, LED indicators, or both.
 - **Offered discount** — Percentage reduction of the ticket price when boarding at this door.
@@ -497,7 +497,7 @@ elif st.session_state.page == 'survey':
         st.subheader("Door L")
         st.markdown(f"**Walking distance to exit**: {aval(left_alt,'D2E')} m")
         st.markdown(f"**Walking distance to door**: {aval(left_alt,'D2D')} m")
-        st.markdown(f"**Obstacle**: {'Yes' if aval(left_alt,'O') == 1 else 'No'}")
+        st.markdown(f"**Crowding on platform**: {'Yes' if aval(left_alt,'O') == 1 else 'No'}")
         st.markdown(f"**Crowding level at door**: {aval(left_alt,'CD')} persons")
         st.markdown(f"**In-vehicle crowding**: {crowding_text_for(left_alt)}")
         st.markdown(
@@ -508,7 +508,7 @@ elif st.session_state.page == 'survey':
         st.subheader("Door R")
         st.markdown(f"**Walking distance to exit**: {aval(right_alt,'D2E')} m")
         st.markdown(f"**Walking distance to door**: {aval(right_alt,'D2D')} m")
-        st.markdown(f"**Obstacle**: {'Yes' if aval(right_alt,'O') == 1 else 'No'}")
+        st.markdown(f"**Crowding on platform**: {'Yes' if aval(right_alt,'O') == 1 else 'No'}")
         st.markdown(f"**Crowding level at door**: {aval(right_alt,'CD')} persons")
         st.markdown(f"**In-vehicle crowding**: {crowding_text_for(right_alt)}")
         st.markdown(
@@ -531,12 +531,20 @@ elif st.session_state.page == 'survey':
     # Get participant's choice
     with st.form(key=f"form_{idx}"):
 
-        previous_value = st.session_state.responses.get(idx, None)
+        stored = st.session_state.responses.get(idx, None)
+
+        # stored ist z.B. "alt1"/"alt2" oder "Next train"/"None of these options"
+        if stored == f"alt{left_alt}":
+            previous_value_ui = "Door L"
+        elif stored == f"alt{right_alt}":
+            previous_value_ui = "Door R"
+        else:
+            previous_value_ui = stored  # "Next train" / "None of these options" / None
 
         selected_option = st.radio(
             "Which option do you choose?",
             options,
-            index=None if previous_value is None else options.index(previous_value)
+            index=None if previous_value_ui is None else options.index(previous_value_ui)
         )
 
         col_back, col_next = st.columns([1, 5])
@@ -547,8 +555,9 @@ elif st.session_state.page == 'survey':
     
         if back_clicked and idx > 0:
             st.session_state.current_idx -= 1
-            #st.rerun()
-    
+            st.rerun()
+            st.stop()
+
         if next_clicked:
 
             if selected_option is None:
@@ -570,6 +579,7 @@ elif st.session_state.page == 'survey':
             sheet = get_gsheet()
             ws_resp = sheet.worksheet("Responses")
 
+            # (Ihr upsert_row bleibt erstmal wie er ist; siehe optionalen Speed-Fix unten)
             upsert_row(
                 ws_resp,
                 key_cols=["participant_id", "CS"],
@@ -581,14 +591,12 @@ elif st.session_state.page == 'survey':
                     "choice": stored_choice,
                     "updated_at": now_utc_iso(),
 
-                    # Kontext (wie bisher)
                     "ticket_price": st.session_state.ticket_price,
                     "trip_duration": st.session_state.trip_duration,
                     "previous_transfers": st.session_state.previous_transfers,
                     "time_recent": st.session_state.time_recent,
                     "travel_mode": st.session_state.travel_mode,
 
-                    # OPTIONAL: wenn Sie Attribute mitspeichern wollen
                     "alt1_D2E": int(question["alt1_D2E"]),
                     "alt1_D2D": int(question["alt1_D2D"]),
                     "alt1_O": int(question["alt1_O"]),
@@ -611,51 +619,15 @@ elif st.session_state.page == 'survey':
                     "alt3_D": float(question["alt3_D"]),
                 }
             )
-            
+
             if idx < total_questions - 1:
                 st.session_state.current_idx += 1
-                #st.rerun()
+                st.rerun()
+                st.stop()
             else:
-                # Create DataFrame from responses
-                # df_responses = pd.DataFrame([
-                #     {
-                #         'participant_number': counter,
-                #         'ticket_price': st.session_state.ticket_price,
-                #         'trip_duration': st.session_state.trip_duration,
-                #         'previous_transfers' : st.session_state.previous_transfers,
-                #         'time_recent' : st.session_state.time_recent,
-                #         'travel_mode' : st.session_state.travel_mode,
-                #         'CS': int(questions.iloc[i]['CS']),
-                #         'choice_set_in_block': i + 1,
-                #         'choice': st.session_state.responses[i],
-                #         'alt1_D2E': questions.iloc[i]['alt1_D2E'],
-                #         'alt1_D2D': questions.iloc[i]['alt1_D2D'],
-                #         'alt1_O': questions.iloc[i]['alt1_O'],
-                #         'alt1_CD': questions.iloc[i]['alt1_CD'],
-                #         'alt1_CrowdingRed': questions.iloc[i]['alt1_CrowdingRed'],
-                #         'alt1_CrowdingGreen': questions.iloc[i]['alt1_CrowdingGreen'],
-                #         'alt1_CIL': questions.iloc[i]['alt1_CIL'],
-                #         'alt1_CID': questions.iloc[i]['alt1_CID'],
-                #         'alt1_D': questions.iloc[i]['alt1_D'],      
-                #         'alt2_D2E': questions.iloc[i]['alt2_D2E'],
-                #         'alt2_D2D': questions.iloc[i]['alt2_D2D'],
-                #         'alt2_O': questions.iloc[i]['alt2_O'],
-                #         'alt2_CD': questions.iloc[i]['alt2_CD'],
-                #         'alt2_CrowdingRed': questions.iloc[i]['alt2_CrowdingRed'],
-                #         'alt2_CrowdingGreen': questions.iloc[i]['alt2_CrowdingGreen'],
-                #         'alt2_CIL': questions.iloc[i]['alt2_CIL'],
-                #         'alt2_CID': questions.iloc[i]['alt2_CID'],
-                #         'alt2_D': questions.iloc[i]['alt2_D'],
-                #         'alt3_time': questions.iloc[i]['alt3_time']
-                #     }
-                #     for i in range(total_questions)
-                # ])
-    
-                # sheet_responses = get_gsheet().worksheet("Responses")
-                # sheet_responses.append_rows(df_responses.values.tolist(), value_input_option="USER_ENTERED")
-    
                 st.session_state.page = 'demographics'
-                #st.rerun()
+                st.rerun()
+                st.stop()
 
 
 
