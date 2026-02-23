@@ -83,6 +83,72 @@ def upsert_row(ws, key_cols, key_vals, row_dict):
 def now_utc_iso():
     return datetime.now(timezone.utc).isoformat()
 
+def flush_all_responses_to_gsheet():
+    if st.session_state.get("responses_flushed", False):
+        return
+    pid = st.session_state.participant_id
+
+    questions = st.session_state.questions_df
+    total_questions = len(questions)
+
+    # Sicherheitscheck: sind wirklich alle beantwortet?
+    missing = [i for i in range(total_questions) if st.session_state.responses.get(i, None) is None]
+    if missing:
+        raise ValueError(f"Not all questions answered. Missing indices: {missing}")
+
+    sheet = get_gsheet()
+    ws_resp = sheet.worksheet("Responses")
+
+    header = ws_resp.row_values(1)
+
+    rows = []
+    ts = now_utc_iso()
+
+    for i, q in questions.iterrows():
+        row_dict = {
+            "participant_id": pid,
+            "CS": int(q["CS"]),
+            "choice_set_in_block": int(i + 1),
+            "choice": st.session_state.responses[i],
+            "updated_at": ts,
+
+            # Kontext
+            "ticket_price": st.session_state.ticket_price,
+            "trip_duration": st.session_state.trip_duration,
+            "previous_transfers": st.session_state.previous_transfers,
+            "time_recent": st.session_state.time_recent,
+            "travel_mode": st.session_state.travel_mode,
+
+            # Attribute
+            "alt1_D2E": int(q["alt1_D2E"]),
+            "alt1_D2D": int(q["alt1_D2D"]),
+            "alt1_CP": int(q["alt1_CP"]),
+            "alt1_CD": int(q["alt1_CD"]),
+            "alt1_CrowdingRed": int(q["alt1_CrowdingRed"]),
+            "alt1_CrowdingGreen": int(q["alt1_CrowdingGreen"]),
+            "alt1_CIL": int(q["alt1_CIL"]),
+            "alt1_CID": int(q["alt1_CID"]),
+            "alt1_D": float(q["alt1_D"]),
+
+            "alt2_D2E": int(q["alt2_D2E"]),
+            "alt2_D2D": int(q["alt2_D2D"]),
+            "alt2_CP": int(q["alt2_CP"]),
+            "alt2_CD": int(q["alt2_CD"]),
+            "alt2_CrowdingRed": int(q["alt2_CrowdingRed"]),
+            "alt2_CrowdingGreen": int(q["alt2_CrowdingGreen"]),
+            "alt2_CIL": int(q["alt2_CIL"]),
+            "alt2_CID": int(q["alt2_CID"]),
+            "alt2_D": float(q["alt2_D"]),
+
+            "alt3_time": int(q["alt3_time"]),
+            "alt3_D": float(q["alt3_D"]),
+        }
+
+        rows.append([row_dict.get(col, "") for col in header])
+
+    ws_resp.append_rows(rows, value_input_option="USER_ENTERED")
+    st.session_state.responses_flushed = True
+
 # --- SETUP ---
 
 # Initialize session state variables
@@ -104,6 +170,8 @@ if "participant_id" not in st.session_state:
     st.session_state.participant_id = str(uuid.uuid4())
 if "started_at" not in st.session_state:
     st.session_state.started_at = None
+if "responses_flushed" not in st.session_state:
+    st.session_state.responses_flushed = False
 
 
 @st.cache_data
@@ -141,6 +209,9 @@ if cs_group == 'A':
     design = design[design['CS'].between(1, 12)].sort_values("CS").copy()
 else:
     design = design[design['CS'].between(13, 24)].sort_values("CS").copy()
+# Fix questions for this participant/session (prevents reordering changes across reruns)
+if "questions_df" not in st.session_state:
+    st.session_state.questions_df = design.reset_index(drop=True).copy()
 
 # Assign trip attributes based on participant counter
 @st.cache_data
@@ -261,7 +332,7 @@ Selecting “None of these options” indicates that you would not choose any of
 Each alternative is described by several attributes that may vary between options:
 - **Walking distance to exit** — Distance from this door to the nearest exit at the destination station.
 - **Walking distance to door** — Distance you walk on the platform to reach this door.
-- **Crowding at platform** — Whether crowds of people are on the platform.
+- **Crowding on platform** — Whether the platform is crowded or not.
 - **Crowding at door** — Number of people waiting at this door location.
 - **In-vehicle crowding** — Expected crowding levels inside the train near this door (green = low, yellow = medium, red = high, gray = no information). Information may be provided via platform display, LED indicators, or both.
 - **Offered discount** — Percentage reduction of the ticket price when boarding at this door.
@@ -318,7 +389,7 @@ If you have any questions about the study, please contact **Laura Knappik** at *
 
 ---
 
-By continuing, you confirm that you are 18+ years old, have read and understood the information provided above and agree to participate under these conditions.
+By continuing, you confirm that you have read and understood the information provided above and agree to participate under these conditions.
 """)
 
     # --- COMPREHENSION CHECK ---
@@ -431,13 +502,12 @@ elif st.session_state.page == 'survey':
     st.caption(f"{tm_text} | Ticket price: {ticket_price} € | Trip duration: {trip_duration} min | Departure time: {time_recent} min")  
 
     
-    questions = design.copy().reset_index(drop=True)
+    questions = st.session_state.questions_df
 
     total_questions = len(questions)
-
     idx = st.session_state.current_idx
-    if f"temp_choice_{idx}" not in st.session_state:
-        st.session_state[f"temp_choice_{idx}"] = st.session_state.responses.get(idx, None)
+
+    
 
     question = questions.iloc[idx]
 
@@ -457,6 +527,19 @@ elif st.session_state.page == 'survey':
     alt1_left = float(question["alt1_D2D"]) > float(question["alt2_D2D"])
     left_alt  = 1 if alt1_left else 2
     right_alt = 2 if alt1_left else 1
+
+    #idx = st.session_state.current_idx
+
+    # Map stored choice -> label, so Back shows the last saved selection
+    # Initialize preselection only once per question (prevents UI flicker on reruns)
+    if f"temp_choice_{idx}" not in st.session_state:
+        stored = st.session_state.responses.get(idx, None)
+        if stored == f"alt{left_alt}":
+            st.session_state[f"temp_choice_{idx}"] = "Door L"
+        elif stored == f"alt{right_alt}":
+            st.session_state[f"temp_choice_{idx}"] = "Door R"
+        else:
+            st.session_state[f"temp_choice_{idx}"] = stored  # "Next train", "None..." or None
     
     def aval(alt, field):
         return question[f"alt{alt}_{field}"]
@@ -497,7 +580,7 @@ elif st.session_state.page == 'survey':
         st.subheader("Door L")
         st.markdown(f"**Walking distance to exit**: {aval(left_alt,'D2E')} m")
         st.markdown(f"**Walking distance to door**: {aval(left_alt,'D2D')} m")
-        st.markdown(f"**Crowding on platform**: {'Yes' if aval(left_alt,'O') == 1 else 'No'}")
+        st.markdown(f"**Crowding on platform**: {'Yes' if aval(left_alt,'CP') == 1 else 'No'}")
         st.markdown(f"**Crowding level at door**: {aval(left_alt,'CD')} persons")
         st.markdown(f"**In-vehicle crowding**: {crowding_text_for(left_alt)}")
         st.markdown(
@@ -508,7 +591,7 @@ elif st.session_state.page == 'survey':
         st.subheader("Door R")
         st.markdown(f"**Walking distance to exit**: {aval(right_alt,'D2E')} m")
         st.markdown(f"**Walking distance to door**: {aval(right_alt,'D2D')} m")
-        st.markdown(f"**Crowding on platform**: {'Yes' if aval(right_alt,'O') == 1 else 'No'}")
+        st.markdown(f"**Crowding on platform**: {'Yes' if aval(right_alt,'CP') == 1 else 'No'}")
         st.markdown(f"**Crowding level at door**: {aval(right_alt,'CD')} persons")
         st.markdown(f"**In-vehicle crowding**: {crowding_text_for(right_alt)}")
         st.markdown(
@@ -530,23 +613,13 @@ elif st.session_state.page == 'survey':
     options = ("Door L", "Door R", "Next train","None of these options")
     # Get participant's choice
     with st.form(key=f"form_{idx}"):
-
-        stored = st.session_state.responses.get(idx, None)
-
-        # stored ist z.B. "alt1"/"alt2" oder "Next train"/"None of these options"
-        if stored == f"alt{left_alt}":
-            previous_value_ui = "Door L"
-        elif stored == f"alt{right_alt}":
-            previous_value_ui = "Door R"
-        else:
-            previous_value_ui = stored  # "Next train" / "None of these options" / None
-
-        selected_option = st.radio(
+        st.session_state[f"temp_choice_{idx}"] = st.radio(
             "Which option do you choose?",
             options,
-            index=None if previous_value_ui is None else options.index(previous_value_ui)
+            index=None if st.session_state[f"temp_choice_{idx}"] is None 
+                else options.index(st.session_state[f"temp_choice_{idx}"])
         )
-
+    
         col_back, col_next = st.columns([1, 5])
         with col_back:
             back_clicked = st.form_submit_button("Back")
@@ -556,78 +629,38 @@ elif st.session_state.page == 'survey':
         if back_clicked and idx > 0:
             st.session_state.current_idx -= 1
             st.rerun()
-            st.stop()
-
+    
         if next_clicked:
 
-            if selected_option is None:
+            selected = st.session_state[f"temp_choice_{idx}"]
+            if selected is None:
                 st.warning("Please select an option before continuing.")
                 st.stop()
 
-            if selected_option == "Door L":
+            if selected == "Door L":
                 stored_choice = f"alt{left_alt}"
-            elif selected_option == "Door R":
+            elif selected == "Door R":
                 stored_choice = f"alt{right_alt}"
             else:
-                stored_choice = selected_option
+                stored_choice = selected   # Next train oder None
 
             st.session_state.responses[idx] = stored_choice
 
-            pid = st.session_state.participant_id
-            cs = int(question["CS"])
-
-            sheet = get_gsheet()
-            ws_resp = sheet.worksheet("Responses")
-
-            # (Ihr upsert_row bleibt erstmal wie er ist; siehe optionalen Speed-Fix unten)
-            upsert_row(
-                ws_resp,
-                key_cols=["participant_id", "CS"],
-                key_vals=[pid, cs],
-                row_dict={
-                    "participant_id": pid,
-                    "CS": int(cs),
-                    "choice_set_in_block": int(idx + 1),
-                    "choice": stored_choice,
-                    "updated_at": now_utc_iso(),
-
-                    "ticket_price": st.session_state.ticket_price,
-                    "trip_duration": st.session_state.trip_duration,
-                    "previous_transfers": st.session_state.previous_transfers,
-                    "time_recent": st.session_state.time_recent,
-                    "travel_mode": st.session_state.travel_mode,
-
-                    "alt1_D2E": int(question["alt1_D2E"]),
-                    "alt1_D2D": int(question["alt1_D2D"]),
-                    "alt1_O": int(question["alt1_O"]),
-                    "alt1_CD": int(question["alt1_CD"]),
-                    "alt1_CrowdingRed": int(question["alt1_CrowdingRed"]),
-                    "alt1_CrowdingGreen": int(question["alt1_CrowdingGreen"]),
-                    "alt1_CIL": int(question["alt1_CIL"]),
-                    "alt1_CID": int(question["alt1_CID"]),
-                    "alt1_D": float(question["alt1_D"]),
-                    "alt2_D2E": int(question["alt2_D2E"]),
-                    "alt2_D2D": int(question["alt2_D2D"]),
-                    "alt2_O": int(question["alt2_O"]),
-                    "alt2_CD": int(question["alt2_CD"]),
-                    "alt2_CrowdingRed": int(question["alt2_CrowdingRed"]),
-                    "alt2_CrowdingGreen": int(question["alt2_CrowdingGreen"]),
-                    "alt2_CIL": int(question["alt2_CIL"]),
-                    "alt2_CID": int(question["alt2_CID"]),
-                    "alt2_D": float(question["alt2_D"]),
-                    "alt3_time": int(question["alt3_time"]),
-                    "alt3_D": float(question["alt3_D"]),
-                }
-            )
-
+            
+            
             if idx < total_questions - 1:
                 st.session_state.current_idx += 1
                 st.rerun()
-                st.stop()
             else:
+                # Write everything once at the end of the survey (fast)
+                try:
+                    flush_all_responses_to_gsheet()
+                except Exception as e:
+                    st.error(f"Could not save responses. Please try again. Error: {e}")
+                    st.stop()
+
                 st.session_state.page = 'demographics'
                 st.rerun()
-                st.stop()
 
 
 
@@ -721,25 +754,30 @@ elif st.session_state.page == 'notes':
     This is optional. You can also leave it empty and continue.
     """)
 
-    # Back OUTSIDE the form (normal button)
-    if st.button("Back"):
-        st.session_state.page = 'demographics'
-        st.rerun()
-
-    # Form with a SINGLE submit button
     with st.form("notes_form"):
         notes_text = st.text_area(
             "Optional notes",
-            value=st.session_state.get("notes_text", ""),
+            value=st.session_state.notes_text,
             height=200,
-            placeholder="Type your notes here (optional)...",
-            key="notes_textarea",
+            placeholder="Type your notes here (optional)..."
         )
 
-        submitted = st.form_submit_button("Submit")
+        col_back, col_next = st.columns([1, 5])
+        with col_back:
+            back_clicked = st.form_submit_button("Back")
+        with col_next:
+            next_clicked = st.form_submit_button("Submit")
 
-    if submitted:
-        # Text übernehmen
+    if back_clicked:
+        # zurück zur letzten Survey-Seite (Index bleibt unverändert)
+        st.session_state.page = 'demographics'
+        st.rerun()
+
+    if next_clicked:
+        if st.session_state.get("final_submitted", False):
+            st.session_state.page = 'end'
+            st.rerun()
+
         st.session_state.notes_text = notes_text
         st.session_state.final_submitted = True
 
@@ -759,7 +797,7 @@ elif st.session_state.page == 'notes':
             }
         )
 
-        # Participants: mark completed – started_at NICHT verlieren
+        # Participants: mark completed (UPSERT) – started_at NICHT verlieren
         ws_part = sheet.worksheet("Participants")
         upsert_row(
             ws_part,
