@@ -530,13 +530,15 @@ elif st.session_state.page == 'survey':
     options = ("Door L", "Door R", "Next train","None of these options")
     # Get participant's choice
     with st.form(key=f"form_{idx}"):
-        st.session_state[f"temp_choice_{idx}"] = st.radio(
+
+        previous_value = st.session_state.responses.get(idx, None)
+
+        selected_option = st.radio(
             "Which option do you choose?",
             options,
-            index=None if st.session_state[f"temp_choice_{idx}"] is None 
-                else options.index(st.session_state[f"temp_choice_{idx}"])
+            index=None if previous_value is None else options.index(previous_value)
         )
-    
+
         col_back, col_next = st.columns([1, 5])
         with col_back:
             back_clicked = st.form_submit_button("Back")
@@ -549,17 +551,16 @@ elif st.session_state.page == 'survey':
     
         if next_clicked:
 
-            selected = st.session_state[f"temp_choice_{idx}"]
-            if selected is None:
+            if selected_option is None:
                 st.warning("Please select an option before continuing.")
                 st.stop()
 
-            if selected == "Door L":
+            if selected_option == "Door L":
                 stored_choice = f"alt{left_alt}"
-            elif selected == "Door R":
+            elif selected_option == "Door R":
                 stored_choice = f"alt{right_alt}"
             else:
-                stored_choice = selected   # Next train oder None
+                stored_choice = selected_option
 
             st.session_state.responses[idx] = stored_choice
 
