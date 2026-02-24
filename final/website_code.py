@@ -317,7 +317,7 @@ There are no correct or incorrect answers.
 **Your situation:**
 For all choice tasks, assume the following:
 - {tm_text}
-- Regular ticket price: **{ticket_price} €**.
+- Regular ticket price: **{ticket_price:.2f} €**.
 - Total trip duration: **{trip_duration} minutes**.
 - {pt_text}
 - Your (upcoming) train will depart in **{time_recent} minutes**.
@@ -341,6 +341,7 @@ Selecting “None of these options” indicates that you would not choose any of
 ---
 
 **Information provided:** 
+
 Each alternative is described by several attributes that may vary between options:
 - **Walking distance to exit** — Distance from this door to the nearest exit at the destination station.
 - **Walking distance to door** — Distance you walk on the platform to reach this door.
