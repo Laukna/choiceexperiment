@@ -308,9 +308,7 @@ if st.session_state.page == 'start':
     st.markdown(f"""
 Dear participant,
 
-In this study, you will complete a series of choice tasks in which you select the boarding door you would use to board a subway train.
-Please imagine yourself in the situation described below and make your decisions as you would in a comparable real-life situation.
-There are no correct or incorrect answers.
+You will be presented with several scenarios in which you choose the boarding door you would use to board a subway train. Please imagine yourself in each situation and make your choice as you would in real life. There are no right or wrong answers.
 
 ---
 
