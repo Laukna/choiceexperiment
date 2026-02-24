@@ -58,6 +58,13 @@ def ensure_tables():
         cur.execute("ALTER TABLE participants ADD COLUMN IF NOT EXISTS notes TEXT;")
         cur.execute("ALTER TABLE participants ADD COLUMN IF NOT EXISTS current_page TEXT;")
 
+        # demographics as real columns (instead of json)
+        cur.execute("ALTER TABLE participants ADD COLUMN IF NOT EXISTS demo_age TEXT;")
+        cur.execute("ALTER TABLE participants ADD COLUMN IF NOT EXISTS demo_gender TEXT;")
+        cur.execute("ALTER TABLE participants ADD COLUMN IF NOT EXISTS demo_trainfq TEXT;")
+        cur.execute("ALTER TABLE participants ADD COLUMN IF NOT EXISTS demo_subwayfq TEXT;")
+        cur.execute("ALTER TABLE participants ADD COLUMN IF NOT EXISTS demo_mobility TEXT;")
+
         # responses (BASE TABLE: lowercase column names)
         cur.execute("""
         CREATE TABLE IF NOT EXISTS responses (
@@ -1152,9 +1159,21 @@ elif st.session_state.page == 'demographics':
         with conn.cursor() as cur:
             cur.execute("""
                 UPDATE participants
-                SET demographics_json=%s
+                SET
+                    demo_age=%s,
+                    demo_gender=%s,
+                    demo_trainfq=%s,
+                    demo_subwayfq=%s,
+                    demo_mobility=%s
                 WHERE participant_id=%s
-            """, (json.dumps(demo), pid))
+            """, (
+                st.session_state.get("demo_age"),
+                st.session_state.get("demo_gender"),
+                st.session_state.get("demo_trainfq"),
+                st.session_state.get("demo_subwayfq"),
+                st.session_state.get("demo_mobility"),
+                pid
+            ))
         conn.commit()
 
         save_progress_db(st.session_state.current_idx, "notes")
