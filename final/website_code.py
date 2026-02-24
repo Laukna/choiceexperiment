@@ -313,7 +313,7 @@ You will be presented with several scenarios in which you choose the boarding do
 ---
 
 **Your situation:**
-For all choice tasks, assume the following:
+For all questions, assume the following:
 - {tm_text}
 - Regular ticket price: **{ticket_price:.2f} €**.
 - Total trip duration: **{trip_duration} minutes**.
@@ -325,9 +325,9 @@ These conditions remain the same throughout the experiment.
 ---
 
 **Decision task:**
-Each choice situation presents four possible responses:
-- Door L
-- Door R
+Each question presents four possible responses:
+- Door L (left)
+- Door R (right)
 - Next train
 - None of these options 
 
@@ -400,7 +400,7 @@ If you have any questions about the study, please contact **Laura Knappik** at *
 
 ---
 
-By continuing, you confirm that you have read and understood the information provided above and agree to participate under these conditions.
+By continuing, you confirm that you are 18+ years old, have read and understood the information provided above, and agree to participate under these conditions.
 """)
 
     # --- COMPREHENSION CHECK ---
