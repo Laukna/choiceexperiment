@@ -354,10 +354,10 @@ Each alternative is described by several attributes that may vary between option
 Please review all information shown for each option and select the alternative you prefer based on your own judgment.
 
 **Examples:** """)
-    example_fig_path = os.path.join(BASE_DIR, "Figures", "rectangle_exp.png")
+    example_fig_path = os.path.join(BASE_DIR, "Figures", "Folie12.png")
     st.image(
         example_fig_path,
-        caption="Example illustration showing how options and information are displayed. Door locations (L and R) are marked. The example includes obstacles, crowding information, waiting time, and ticket discounts as they may appear in the tasks.",
+        caption="Example illustration showing how options and information are displayed. Door locations (L and R) are marked. The example includes crowding information, waiting time, and ticket discounts as they may appear in the tasks.",
         width="content"
     )
     
