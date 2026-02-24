@@ -178,12 +178,22 @@ if "submitted_notes" not in st.session_state:
     st.session_state.submitted_notes = False
 if "final_submitted" not in st.session_state:
     st.session_state.final_submitted = False
-if "participant_id" not in st.session_state:
-    st.session_state.participant_id = str(uuid.uuid4())
 if "started_at" not in st.session_state:
     st.session_state.started_at = None
 if "responses_flushed" not in st.session_state:
     st.session_state.responses_flushed = False
+
+qp = st.query_params
+pid_from_url = qp.get("pid")
+
+if "participant_id" not in st.session_state:
+    if pid_from_url:
+        st.session_state.participant_id = str(pid_from_url)
+    else:
+        st.session_state.participant_id = str(uuid.uuid4())
+        st.query_params["pid"] = st.session_state.participant_id
+else:
+    st.query_params["pid"] = st.session_state.participant_id
 
 
 @st.cache_data
@@ -222,8 +232,52 @@ if cs_group == 'A':
 else:
     design = design[design['CS'].between(13, 24)].sort_values("CS").copy()
 # Fix questions for this participant/session (prevents reordering changes across reruns)
+# Fix questions for this participant/session (prevents reordering changes across reruns)
 if "questions_df" not in st.session_state:
     st.session_state.questions_df = design.reset_index(drop=True).copy()
+
+# Restore progress once per session (from Participants sheet)
+if "progress_loaded" not in st.session_state:
+    try:
+        ws_part = get_gsheet().worksheet("Participants")
+        data = ws_part.get_all_values()
+        if data and len(data) > 1:
+            header = data[0]
+            col = {name: i for i, name in enumerate(header)}
+            pid = st.session_state.participant_id
+
+            row = None
+            for r in data[1:]:
+                if len(r) > col.get("participant_id", 10**9) and r[col["participant_id"]] == pid:
+                    row = r
+                    break
+            if row and "started_at" in col and len(row) > col["started_at"] and row[col["started_at"]].strip():
+                st.session_state.started_at = row[col["started_at"]].strip()
+
+            if row and "responses_json" in col and len(row) > col["responses_json"]:
+                raw = row[col["responses_json"]].strip()
+                if raw:
+                    loaded = json.loads(raw)
+                    st.session_state.responses = {int(k): v for k, v in loaded.items()}
+
+            # Prefer first unanswered index
+            total = len(st.session_state.questions_df)
+            first_missing = None
+            for i in range(total):
+                if st.session_state.responses.get(i, None) is None:
+                    first_missing = i
+                    break
+            if first_missing is not None:
+                st.session_state.current_idx = first_missing
+            # AUTO resume into survey if progress exists
+            if st.session_state.responses:
+                st.session_state.page = "survey"
+    except Exception:
+        pass  # keep it minimal: if load fails, just start normally
+
+    st.session_state.progress_loaded = True
+
+
 
 # Assign trip attributes based on participant counter
 @st.cache_data
@@ -657,6 +711,29 @@ elif st.session_state.page == 'survey':
 
             st.session_state.responses[idx] = stored_choice
 
+            # Autosave progress to Participants every N questions (fast)
+            N = 1  # z.B. 3; nimm 1 wenn es dich nicht stört
+            if (idx + 1) % N == 0:
+                try:
+                    ws_part = get_gsheet().worksheet("Participants")
+                    upsert_row(
+                        ws_part,
+                        key_cols=["participant_id"],
+                        key_vals=[st.session_state.participant_id],
+                        row_dict={
+                            "participant_id": st.session_state.participant_id,
+                            "started_at": st.session_state.started_at,
+                            "finished_at": "",
+                            "status": "in_progress",
+                            "cs_group": st.session_state.cs_group,
+                            "scenario_id": st.session_state.scenario_id,
+                            "current_idx": int(idx + 1),
+                            "responses_json": json.dumps(st.session_state.responses),
+                            "updated_at": now_utc_iso(),
+                        }
+                    )
+                except Exception:
+                    pass
             
             
             if idx < total_questions - 1:
@@ -765,6 +842,12 @@ elif st.session_state.page == 'notes':
     This is optional. You can also leave it empty and continue.
     """)
 
+    # ✅ Back button OUTSIDE the form (does NOT submit the form)
+    if st.button("Back", key="notes_back"):
+        st.session_state.page = 'demographics'
+        st.rerun()
+
+    # ✅ Only one submit inside the form
     with st.form("notes_form"):
         notes_text = st.text_area(
             "Optional notes",
@@ -773,18 +856,10 @@ elif st.session_state.page == 'notes':
             placeholder="Type your notes here (optional)..."
         )
 
-        col_back, col_next = st.columns([1, 5])
-        with col_back:
-            back_clicked = st.form_submit_button("Back")
-        with col_next:
-            next_clicked = st.form_submit_button("Submit")
+        submitted = st.form_submit_button("Submit")
 
-    if back_clicked:
-        # zurück zur letzten Survey-Seite (Index bleibt unverändert)
-        st.session_state.page = 'demographics'
-        st.rerun()
-
-    if next_clicked:
+    if submitted:
+        # Prevent double submits on rerun
         if st.session_state.get("final_submitted", False):
             st.session_state.page = 'end'
             st.rerun()
@@ -816,11 +891,13 @@ elif st.session_state.page == 'notes':
             key_vals=[pid],
             row_dict={
                 "participant_id": pid,
-                "started_at": st.session_state.started_at or "",
+                "started_at": st.session_state.started_at,
                 "finished_at": now_utc_iso(),
                 "status": "completed",
                 "cs_group": st.session_state.cs_group,
                 "scenario_id": st.session_state.scenario_id,
+                "current_idx": int(st.session_state.current_idx),
+                "responses_json": json.dumps(st.session_state.responses),
                 "updated_at": now_utc_iso(),
             }
         )
