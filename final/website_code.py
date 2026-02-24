@@ -9,6 +9,7 @@ import uuid
 from datetime import datetime, timezone
 from gspread.utils import rowcol_to_a1
 import hashlib
+import psycopg2
 
 
 # Base directory for relative assets (folder containing this script)
@@ -32,6 +33,17 @@ def get_gsheet():
     gc = gspread.authorize(credentials)
     return gc.open_by_key(credentials_dict["gsheet_key"])
 
+@st.cache_resource
+def get_db():
+    return psycopg2.connect(os.environ["DATABASE_URL"], sslmode="require")
+
+try:
+    conn = get_db()
+    with conn.cursor() as cur:
+        cur.execute("SELECT 1;")
+        _ = cur.fetchone()
+except Exception as e:
+    st.error(f"DB connection failed: {e}")
 
 def find_row_by_keys(ws, header, key_cols, key_vals):
     # Build column indices
