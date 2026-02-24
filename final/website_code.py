@@ -153,7 +153,7 @@ def flush_all_responses_to_gsheet():
 
 # --- GLOBAL HEADER WITH LOGO ---
 
-logo_path = os.path.join(BASE_DIR, "Figures", "rwth_lehrstuhl_fuer_data_and_business_analytics_de_rgb.png")
+logo_path = os.path.join(BASE_DIR, "Figures", "rwth_lehrstuhl_fuer_data_and_business_analytics_de_rgb.svg")
 
 col_left, col_center, col_right = st.columns([1,2,1])
 
