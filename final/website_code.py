@@ -371,7 +371,7 @@ Please review all information shown for each option and select the alternative y
     crowding_exp_fig_path = os.path.join(BASE_DIR, "Figures", "example_invehicle.png")
     st.image(
         crowding_exp_fig_path,
-        caption="In-vehicle crowding information is communicated via alternative information channels (LED guidance or platform display). In this example, Door L shows green crowding information via LED guidance, while no information is provided via the display (gray indicates absence of information).",
+        caption="In-vehicle crowding information is communicated via alternative information channels (LED guidance or platform display). In this example, Door R shows green crowding information via LED guidance, while no information is provided via the display (gray indicates absence of information).",
         width="content"
     )
 
