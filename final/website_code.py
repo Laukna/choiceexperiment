@@ -931,6 +931,15 @@ elif st.session_state.page == 'notes':
     This is optional. You can also leave it empty and continue.
     """)
 
+    # ✅ Back außerhalb des Forms => Cmd/Ctrl+Enter kann nicht "Back" triggern
+    col_back, col_spacer = st.columns([1, 5])
+    with col_back:
+        if st.button("Back"):
+            st.session_state.page = 'demographics'
+            save_progress_to_participants(status="started")
+            st.rerun()
+
+    # ✅ Form nur mit EINEM Submit-Button
     with st.form("notes_form"):
         notes_text = st.text_area(
             "Optional notes",
@@ -939,22 +948,30 @@ elif st.session_state.page == 'notes':
             placeholder="Type your notes here (optional)..."
         )
 
-        col_back, col_next = st.columns([1, 5])
-        with col_back:
-            back_clicked = st.form_submit_button("Back")
-        with col_next:
-            next_clicked = st.form_submit_button("Submit")
+        submitted = st.form_submit_button("Submit")
 
-    if back_clicked:
-        # zurück zur letzten Survey-Seite (Index bleibt unverändert)
-        st.session_state.page = 'demographics'
-        save_progress_to_participants(status="started")
+    if submitted:
+        st.session_state.notes_text = notes_text
+        st.session_state.final_submitted = True
+
+        pid = st.session_state.participant_id
+        sheet = get_gsheet()
+
+        ws_notes = sheet.worksheet("Notes")
+        upsert_row(
+            ws_notes,
+            key_cols=["participant_id"],
+            key_vals=[pid],
+            row_dict={
+                "participant_id": pid,
+                "notes": st.session_state.notes_text,
+                "updated_at": now_utc_iso(),
+            }
+        )
+
+        st.session_state.page = 'end'
+        save_progress_to_participants(status="completed")
         st.rerun()
-
-    if next_clicked:
-        if st.session_state.get("final_submitted", False):
-            st.session_state.page = 'end'
-            st.rerun()
 
         st.session_state.notes_text = notes_text
         st.session_state.final_submitted = True
