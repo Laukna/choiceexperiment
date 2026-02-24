@@ -37,13 +37,42 @@ def get_gsheet():
 def get_db():
     return psycopg2.connect(os.environ["DATABASE_URL"], sslmode="require")
 
+# --- CREATE TABLES (run once) ---
 try:
     conn = get_db()
     with conn.cursor() as cur:
-        cur.execute("SELECT 1;")
-        _ = cur.fetchone()
+
+        # Participants table
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS participants (
+            participant_id TEXT PRIMARY KEY,
+            started_at TEXT,
+            finished_at TEXT,
+            status TEXT,
+            cs_group TEXT,
+            scenario_id INTEGER,
+            current_idx INTEGER,
+            responses_json TEXT
+        );
+        """)
+
+        # Responses table (optional, für später)
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS responses (
+            participant_id TEXT,
+            choice_set_in_block INTEGER,
+            choice TEXT,
+            updated_at TEXT,
+            PRIMARY KEY (participant_id, choice_set_in_block)
+        );
+        """)
+
+        conn.commit()
+
 except Exception as e:
-    st.error(f"DB connection failed: {e}")
+    st.error(f"DB table creation failed: {e}")
+
+
 
 def find_row_by_keys(ws, header, key_cols, key_vals):
     # Build column indices
