@@ -142,8 +142,8 @@ def now_utc_iso():
     return datetime.now(timezone.utc).isoformat()
 
 def flush_all_responses_to_gsheet():
-    if st.session_state.get("responses_flushed", False):
-        return
+    # if st.session_state.get("responses_flushed", False):
+    #     return
     pid = st.session_state.participant_id
 
     questions = st.session_state.questions_df
@@ -156,10 +156,14 @@ def flush_all_responses_to_gsheet():
 
     sheet = get_gsheet()
     ws_resp = sheet.worksheet("Responses")
-
     header = ws_resp.row_values(1)
+    if not header:
+        raise ValueError("Responses worksheet has no header row.")
+    col = {h: i for i, h in enumerate(header)}
 
-    rows = []
+    # header = ws_resp.row_values(1)
+
+    # rows = []
     ts = now_utc_iso()
 
     for i, q in questions.iterrows():
@@ -202,10 +206,12 @@ def flush_all_responses_to_gsheet():
             "alt3_D": float(q["alt3_D"]),
         }
 
-        rows.append([row_dict.get(col, "") for col in header])
+        upsert_response_row_fast(ws_resp, row_dict, header=header, col=col)
 
-    ws_resp.append_rows(rows, value_input_option="USER_ENTERED")
-    st.session_state.responses_flushed = True
+        #rows.append([row_dict.get(col, "") for col in header])
+
+    #ws_resp.append_rows(rows, value_input_option="USER_ENTERED")
+    #st.session_state.responses_flushed = True
 
 
 def save_progress_to_participants(status="started"):
@@ -276,6 +282,57 @@ def load_progress_from_participants():
         "last_idx": getv("last_idx", ""),
         "responses_json": getv("responses_json", ""),
     }
+
+def upsert_response_row_fast(ws_resp, row_dict, header=None, col=None):
+    """
+    Schnelles UPSERT für Responses:
+    Schlüssel = (participant_id, choice_set_in_block)
+    Kein get_all_values().
+    """
+    if header is None or col is None:
+        header = ws_resp.row_values(1)
+        if not header:
+            raise ValueError("Responses worksheet has no header row.")
+        col = {h: i for i, h in enumerate(header)}  # 0-based
+
+    # Required columns
+    for needed in ["participant_id", "choice_set_in_block"]:
+        if needed not in col:
+            raise ValueError(f"Responses is missing required column: {needed}")
+
+    pid = str(row_dict["participant_id"])
+    csb = str(row_dict["choice_set_in_block"])
+
+    # Build full row in header order
+    full_row = [row_dict.get(h, "") for h in header]
+
+    pid_col_1based = col["participant_id"] + 1
+    csb_col_1based = col["choice_set_in_block"] + 1
+
+    # Find all rows with this pid in participant_id column
+    try:
+        pid_cells = ws_resp.findall(pid, in_column=pid_col_1based)
+    except TypeError:
+        # older gspread without in_column
+        pid_cells = ws_resp.findall(pid)
+
+    target_row = None
+    for c in pid_cells:
+        # ensure match is in the participant_id column
+        if c.col != pid_col_1based:
+            continue
+        csb_val = ws_resp.cell(c.row, csb_col_1based).value
+        if str(csb_val) == csb:
+            target_row = c.row
+            break
+
+    if target_row is None:
+        ws_resp.append_row(full_row, value_input_option="USER_ENTERED")
+        return
+
+    start = rowcol_to_a1(target_row, 1)
+    end = rowcol_to_a1(target_row, len(header))
+    ws_resp.update(f"{start}:{end}", [full_row])
 
 
 
@@ -973,45 +1030,45 @@ elif st.session_state.page == 'notes':
         save_progress_to_participants(status="completed")
         st.rerun()
 
-        st.session_state.notes_text = notes_text
-        st.session_state.final_submitted = True
+        # st.session_state.notes_text = notes_text
+        # st.session_state.final_submitted = True
 
-        pid = st.session_state.participant_id
-        sheet = get_gsheet()
+        # pid = st.session_state.participant_id
+        # sheet = get_gsheet()
 
-        # Notes UPSERT
-        ws_notes = sheet.worksheet("Notes")
-        upsert_row(
-            ws_notes,
-            key_cols=["participant_id"],
-            key_vals=[pid],
-            row_dict={
-                "participant_id": pid,
-                "notes": st.session_state.notes_text,
-                "updated_at": now_utc_iso(),
-            }
-        )
-
-        # # Participants: mark completed (UPSERT) – started_at NICHT verlieren
-        # ws_part = sheet.worksheet("Participants")
+        # # Notes UPSERT
+        # ws_notes = sheet.worksheet("Notes")
         # upsert_row(
-        #     ws_part,
+        #     ws_notes,
         #     key_cols=["participant_id"],
         #     key_vals=[pid],
         #     row_dict={
         #         "participant_id": pid,
-        #         "started_at": st.session_state.started_at or "",
-        #         "finished_at": now_utc_iso(),
-        #         "status": "completed",
-        #         "cs_group": st.session_state.cs_group,
-        #         "scenario_id": st.session_state.scenario_id,
+        #         "notes": st.session_state.notes_text,
         #         "updated_at": now_utc_iso(),
         #     }
         # )
 
-        st.session_state.page = 'end'
-        save_progress_to_participants(status="completed")
-        st.rerun()
+        # # # Participants: mark completed (UPSERT) – started_at NICHT verlieren
+        # # ws_part = sheet.worksheet("Participants")
+        # # upsert_row(
+        # #     ws_part,
+        # #     key_cols=["participant_id"],
+        # #     key_vals=[pid],
+        # #     row_dict={
+        # #         "participant_id": pid,
+        # #         "started_at": st.session_state.started_at or "",
+        # #         "finished_at": now_utc_iso(),
+        # #         "status": "completed",
+        # #         "cs_group": st.session_state.cs_group,
+        # #         "scenario_id": st.session_state.scenario_id,
+        # #         "updated_at": now_utc_iso(),
+        # #     }
+        # # )
+
+        # st.session_state.page = 'end'
+        # save_progress_to_participants(status="completed")
+        # st.rerun()
 
 
 elif st.session_state.page == 'end':
