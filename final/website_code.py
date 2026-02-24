@@ -14,16 +14,6 @@ import hashlib
 # Base directory for relative assets (folder containing this script)
 BASE_DIR = os.path.dirname(__file__)
 
-# --- PID in URL persistieren (damit Restart/Refresh nicht neue Session erzeugt) ---
-qp = st.query_params  # Streamlit >= 1.30
-if "pid" in qp and qp["pid"]:
-    st.session_state.participant_id = qp["pid"]
-else:
-    # participant_id ggf. später initialisiert, aber wir setzen ihn hier schon, um URL sofort zu fixieren
-    if "participant_id" not in st.session_state:
-        st.session_state.participant_id = str(uuid.uuid4())
-    st.query_params["pid"] = st.session_state.participant_id
-
 
 @st.cache_resource
 def get_gsheet():
@@ -90,60 +80,12 @@ def upsert_row(ws, key_cols, key_vals, row_dict):
         end = rowcol_to_a1(row_idx, len(header))
         ws.update(f"{start}:{end}", [full_row])
 
-def upsert_participant_row_fast(row_dict):
-    """
-    Schnelles UPSERT speziell für Worksheet 'Participants':
-    - findet participant_id via ws.find()
-    - aktualisiert nur die entsprechende Zeile
-    - wenn nicht vorhanden: append_row
-    """
-    pid = row_dict.get("participant_id")
-    if not pid:
-        raise ValueError("row_dict must contain 'participant_id'")
-
-    sheet = get_gsheet()
-    ws = sheet.worksheet("Participants")
-
-    header = ws.row_values(1)
-    if not header:
-        raise ValueError("Participants worksheet has no header row.")
-    col = {h: i for i, h in enumerate(header)}  # 0-based
-
-    # Prüfen, ob alle Keys im Header existieren
-    missing = [c for c in row_dict.keys() if c not in col]
-    if missing:
-        raise ValueError(f"Missing columns in Participants: {missing}")
-
-    # Zeile in Header-Reihenfolge bauen
-    full_row = [row_dict.get(h, "") for h in header]
-
-    # participant_id Spalte (1-based)
-    pid_col_1based = col["participant_id"] + 1
-
-    # Finde die Zeile anhand participant_id (nur in dieser Spalte!)
-    try:
-        cell = ws.find(pid, in_column=pid_col_1based)
-    except TypeError:
-        # Falls Ihre gspread-Version 'in_column' nicht unterstützt:
-        cell = ws.find(pid)
-
-    if cell is None or cell.col != pid_col_1based:
-        # nicht gefunden -> append
-        ws.append_row(full_row, value_input_option="USER_ENTERED")
-        return
-
-    # gefunden -> ganze Zeile updaten (A..lastcol)
-    row_idx = cell.row
-    start = rowcol_to_a1(row_idx, 1)
-    end = rowcol_to_a1(row_idx, len(header))
-    ws.update(f"{start}:{end}", [full_row])
-
 def now_utc_iso():
     return datetime.now(timezone.utc).isoformat()
 
 def flush_all_responses_to_gsheet():
-    # if st.session_state.get("responses_flushed", False):
-    #     return
+    if st.session_state.get("responses_flushed", False):
+        return
     pid = st.session_state.participant_id
 
     questions = st.session_state.questions_df
@@ -156,14 +98,10 @@ def flush_all_responses_to_gsheet():
 
     sheet = get_gsheet()
     ws_resp = sheet.worksheet("Responses")
+
     header = ws_resp.row_values(1)
-    if not header:
-        raise ValueError("Responses worksheet has no header row.")
-    col = {h: i for i, h in enumerate(header)}
 
-    # header = ws_resp.row_values(1)
-
-    # rows = []
+    rows = []
     ts = now_utc_iso()
 
     for i, q in questions.iterrows():
@@ -206,133 +144,10 @@ def flush_all_responses_to_gsheet():
             "alt3_D": float(q["alt3_D"]),
         }
 
-        upsert_response_row_fast(ws_resp, row_dict, header=header, col=col)
+        rows.append([row_dict.get(col, "") for col in header])
 
-        #rows.append([row_dict.get(col, "") for col in header])
-
-    #ws_resp.append_rows(rows, value_input_option="USER_ENTERED")
-    #st.session_state.responses_flushed = True
-
-
-def save_progress_to_participants(status="started"):
-    pid = st.session_state.participant_id
-
-    responses_json = json.dumps(st.session_state.responses, separators=(",", ":"))
-
-    upsert_participant_row_fast(
-        {
-            "participant_id": pid,
-            "started_at": st.session_state.started_at or "",
-            "finished_at": "" if status != "completed" else now_utc_iso(),
-            "status": status,
-            "cs_group": st.session_state.cs_group,
-            "scenario_id": st.session_state.scenario_id,
-            "last_page": st.session_state.page,
-            "last_idx": int(st.session_state.current_idx),
-            "responses_json": responses_json,
-            "updated_at": now_utc_iso(),
-        }
-    )
-
-
-def load_progress_from_participants():
-    """Lädt Fortschritt aus Participants (schnell via ws.find)."""
-    pid = st.session_state.participant_id
-    sheet = get_gsheet()
-    ws_part = sheet.worksheet("Participants")
-
-    # Header lesen (1. Zeile)
-    header = ws_part.row_values(1)
-    if not header:
-        return None
-    col = {h: i for i, h in enumerate(header)}  # 0-based indices
-
-    if "participant_id" not in col:
-        return None
-
-    # PID-Zeile schnell finden
-    try:
-        cell = ws_part.find(pid)  # sucht im ganzen Sheet nach exaktem Match
-    except Exception:
-        return None
-
-    if cell is None:
-        return None
-
-    # Sicherheitscheck: Treffer muss in participant_id-Spalte sein
-    pid_col_1based = col["participant_id"] + 1
-    if cell.col != pid_col_1based:
-        # Falls pid irgendwo anders auftaucht (unwahrscheinlich), ignorieren
-        return None
-
-    # Ganze Zeile lesen
-    row = ws_part.row_values(cell.row)
-
-    def getv(name, default=""):
-        i = col.get(name)
-        return row[i] if i is not None and i < len(row) else default
-
-    return {
-        "status": getv("status", ""),
-        "started_at": getv("started_at", ""),
-        "finished_at": getv("finished_at", ""),
-        "cs_group": getv("cs_group", ""),
-        "scenario_id": getv("scenario_id", ""),
-        "last_page": getv("last_page", ""),
-        "last_idx": getv("last_idx", ""),
-        "responses_json": getv("responses_json", ""),
-    }
-
-def upsert_response_row_fast(ws_resp, row_dict, header=None, col=None):
-    """
-    Schnelles UPSERT für Responses:
-    Schlüssel = (participant_id, choice_set_in_block)
-    Kein get_all_values().
-    """
-    if header is None or col is None:
-        header = ws_resp.row_values(1)
-        if not header:
-            raise ValueError("Responses worksheet has no header row.")
-        col = {h: i for i, h in enumerate(header)}  # 0-based
-
-    # Required columns
-    for needed in ["participant_id", "choice_set_in_block"]:
-        if needed not in col:
-            raise ValueError(f"Responses is missing required column: {needed}")
-
-    pid = str(row_dict["participant_id"])
-    csb = str(row_dict["choice_set_in_block"])
-
-    # Build full row in header order
-    full_row = [row_dict.get(h, "") for h in header]
-
-    pid_col_1based = col["participant_id"] + 1
-    csb_col_1based = col["choice_set_in_block"] + 1
-
-    # Find all rows with this pid in participant_id column
-    try:
-        pid_cells = ws_resp.findall(pid, in_column=pid_col_1based)
-    except TypeError:
-        # older gspread without in_column
-        pid_cells = ws_resp.findall(pid)
-
-    target_row = None
-    for c in pid_cells:
-        # ensure match is in the participant_id column
-        if c.col != pid_col_1based:
-            continue
-        csb_val = ws_resp.cell(c.row, csb_col_1based).value
-        if str(csb_val) == csb:
-            target_row = c.row
-            break
-
-    if target_row is None:
-        ws_resp.append_row(full_row, value_input_option="USER_ENTERED")
-        return
-
-    start = rowcol_to_a1(target_row, 1)
-    end = rowcol_to_a1(target_row, len(header))
-    ws_resp.update(f"{start}:{end}", [full_row])
+    ws_resp.append_rows(rows, value_input_option="USER_ENTERED")
+    st.session_state.responses_flushed = True
 
 
 
@@ -454,40 +269,6 @@ st.session_state.ticket_price = float(scenario["ticket_price"])
 st.session_state.previous_transfers = scenario["previous_transfers"]
 st.session_state.time_recent = int(scenario["time_recent"])
 st.session_state.travel_mode = scenario["travel_mode"]
-
-# --- AUTO-RESUME (einmal pro Session) ---
-if "did_resume_check" not in st.session_state:
-    st.session_state.did_resume_check = True
-
-    p = load_progress_from_participants()
-
-    # Wenn bereits "completed", direkt ans Ende
-    if p and p.get("status") == "completed":
-        st.session_state.page = "end"
-
-    # Wenn bereits "started", Fortschritt wiederherstellen
-    elif p and p.get("status") == "started":
-        if p.get("started_at"):
-            st.session_state.started_at = p["started_at"]
-
-        # responses zurückladen
-        try:
-            loaded = json.loads(p.get("responses_json") or "{}")
-            # JSON keys können Strings sein -> int
-            st.session_state.responses = {int(k): v for k, v in loaded.items()}
-        except Exception:
-            pass
-
-        # Navigation zurückladen
-        lp = p.get("last_page") or "survey"
-        try:
-            st.session_state.current_idx = int(p.get("last_idx") or 0)
-        except Exception:
-            st.session_state.current_idx = 0
-
-        st.session_state.page = lp
-        if st.session_state.page != "start":
-            st.rerun()
 
 ticket_price = st.session_state.ticket_price
 trip_duration = st.session_state.trip_duration
@@ -699,17 +480,20 @@ By continuing, you confirm that you are 18+ years old, have read and understood 
         if st.session_state.started_at is None:
             st.session_state.started_at = now_utc_iso()
 
-        upsert_participant_row_fast(
-            {
+        sheet = get_gsheet()
+        ws_part = sheet.worksheet("Participants")
+
+        upsert_row(
+            ws_part,
+            key_cols=["participant_id"],
+            key_vals=[pid],
+            row_dict={
                 "participant_id": pid,
                 "started_at": st.session_state.started_at,
                 "finished_at": "",
                 "status": "started",
                 "cs_group": st.session_state.cs_group,
                 "scenario_id": st.session_state.scenario_id,
-                "last_page": "survey",
-                "last_idx": 0,
-                "responses_json": "{}",
                 "updated_at": now_utc_iso(),
             }
         )
@@ -855,7 +639,6 @@ elif st.session_state.page == 'survey':
     
         if back_clicked and idx > 0:
             st.session_state.current_idx -= 1
-            save_progress_to_participants(status="started")
             st.rerun()
     
         if next_clicked:
@@ -873,13 +656,11 @@ elif st.session_state.page == 'survey':
                 stored_choice = selected   # Next train oder None
 
             st.session_state.responses[idx] = stored_choice
-            
 
             
             
             if idx < total_questions - 1:
                 st.session_state.current_idx += 1
-                save_progress_to_participants(status="started")
                 st.rerun()
             else:
                 # Write everything once at the end of the survey (fast)
@@ -890,8 +671,6 @@ elif st.session_state.page == 'survey':
                     st.stop()
 
                 st.session_state.page = 'demographics'
-                #st.session_state.current_idx = idx  # optional egal
-                save_progress_to_participants(status="started")  # damit last_page korrekt ist
                 st.rerun()
 
 
@@ -947,7 +726,6 @@ elif st.session_state.page == 'demographics':
 
     if back_clicked:
         st.session_state.page = 'survey'
-        save_progress_to_participants(status="started")
         st.rerun()
         # Make sure this is at the same level as the other inputs
         #submitted = st.form_submit_button("Submit Demographic Data")
@@ -973,7 +751,6 @@ elif st.session_state.page == 'demographics':
         )
 
         st.session_state.page = 'notes'
-        save_progress_to_participants(status="started")
         st.rerun()
 
 elif st.session_state.page == 'notes':
@@ -988,15 +765,6 @@ elif st.session_state.page == 'notes':
     This is optional. You can also leave it empty and continue.
     """)
 
-    # ✅ Back außerhalb des Forms => Cmd/Ctrl+Enter kann nicht "Back" triggern
-    col_back, col_spacer = st.columns([1, 5])
-    with col_back:
-        if st.button("Back"):
-            st.session_state.page = 'demographics'
-            save_progress_to_participants(status="started")
-            st.rerun()
-
-    # ✅ Form nur mit EINEM Submit-Button
     with st.form("notes_form"):
         notes_text = st.text_area(
             "Optional notes",
@@ -1005,15 +773,29 @@ elif st.session_state.page == 'notes':
             placeholder="Type your notes here (optional)..."
         )
 
-        submitted = st.form_submit_button("Submit")
+        col_back, col_next = st.columns([1, 5])
+        with col_back:
+            back_clicked = st.form_submit_button("Back")
+        with col_next:
+            next_clicked = st.form_submit_button("Submit")
 
-    if submitted:
+    if back_clicked:
+        # zurück zur letzten Survey-Seite (Index bleibt unverändert)
+        st.session_state.page = 'demographics'
+        st.rerun()
+
+    if next_clicked:
+        if st.session_state.get("final_submitted", False):
+            st.session_state.page = 'end'
+            st.rerun()
+
         st.session_state.notes_text = notes_text
         st.session_state.final_submitted = True
 
         pid = st.session_state.participant_id
         sheet = get_gsheet()
 
+        # Notes UPSERT
         ws_notes = sheet.worksheet("Notes")
         upsert_row(
             ws_notes,
@@ -1026,49 +808,25 @@ elif st.session_state.page == 'notes':
             }
         )
 
+        # Participants: mark completed (UPSERT) – started_at NICHT verlieren
+        ws_part = sheet.worksheet("Participants")
+        upsert_row(
+            ws_part,
+            key_cols=["participant_id"],
+            key_vals=[pid],
+            row_dict={
+                "participant_id": pid,
+                "started_at": st.session_state.started_at or "",
+                "finished_at": now_utc_iso(),
+                "status": "completed",
+                "cs_group": st.session_state.cs_group,
+                "scenario_id": st.session_state.scenario_id,
+                "updated_at": now_utc_iso(),
+            }
+        )
+
         st.session_state.page = 'end'
-        save_progress_to_participants(status="completed")
         st.rerun()
-
-        # st.session_state.notes_text = notes_text
-        # st.session_state.final_submitted = True
-
-        # pid = st.session_state.participant_id
-        # sheet = get_gsheet()
-
-        # # Notes UPSERT
-        # ws_notes = sheet.worksheet("Notes")
-        # upsert_row(
-        #     ws_notes,
-        #     key_cols=["participant_id"],
-        #     key_vals=[pid],
-        #     row_dict={
-        #         "participant_id": pid,
-        #         "notes": st.session_state.notes_text,
-        #         "updated_at": now_utc_iso(),
-        #     }
-        # )
-
-        # # # Participants: mark completed (UPSERT) – started_at NICHT verlieren
-        # # ws_part = sheet.worksheet("Participants")
-        # # upsert_row(
-        # #     ws_part,
-        # #     key_cols=["participant_id"],
-        # #     key_vals=[pid],
-        # #     row_dict={
-        # #         "participant_id": pid,
-        # #         "started_at": st.session_state.started_at or "",
-        # #         "finished_at": now_utc_iso(),
-        # #         "status": "completed",
-        # #         "cs_group": st.session_state.cs_group,
-        # #         "scenario_id": st.session_state.scenario_id,
-        # #         "updated_at": now_utc_iso(),
-        # #     }
-        # # )
-
-        # st.session_state.page = 'end'
-        # save_progress_to_participants(status="completed")
-        # st.rerun()
 
 
 elif st.session_state.page == 'end':
