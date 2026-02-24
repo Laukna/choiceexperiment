@@ -149,8 +149,20 @@ def flush_all_responses_to_gsheet():
     ws_resp.append_rows(rows, value_input_option="USER_ENTERED")
     st.session_state.responses_flushed = True
 
-# --- SETUP ---
 
+
+# --- GLOBAL HEADER WITH LOGO ---
+
+logo_path = os.path.join(BASE_DIR, "Figures", "rwth_lehrstuhl_fuer_data_and_business_analytics_de_rgb.png")
+
+col_logo, col_spacer = st.columns([3,1])
+
+with col_logo:
+    st.image(logo_path, width=500)  
+
+st.markdown("---")
+
+# --- SETUP ---
 # Initialize session state variables
 if 'page' not in st.session_state:
     st.session_state.page = 'start'
