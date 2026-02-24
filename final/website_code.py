@@ -2,12 +2,12 @@ import streamlit as st
 import pandas as pd
 import os
 import json
-import gspread
-from google.oauth2.service_account import Credentials
+#import gspread
+#from google.oauth2.service_account import Credentials
 from PIL import Image, ImageDraw
 import uuid
 from datetime import datetime, timezone
-from gspread.utils import rowcol_to_a1
+#from gspread.utils import rowcol_to_a1
 import hashlib
 import psycopg2
 
@@ -16,33 +16,32 @@ import psycopg2
 BASE_DIR = os.path.dirname(__file__)
 
 
-@st.cache_resource
-def get_gsheet():
-    from google.oauth2.service_account import Credentials
-    import gspread
+#@st.cache_resource
+# def get_gsheet():
+#     from google.oauth2.service_account import Credentials
+#     import gspread
 
-    credentials_dict = dict(st.secrets["gspread"])  # convert TOML object to dict
-    scopes = [
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive"
-    ]
-    credentials = Credentials.from_service_account_info(
-        credentials_dict,
-        scopes=scopes
-    )
-    gc = gspread.authorize(credentials)
-    return gc.open_by_key(credentials_dict["gsheet_key"])
+#     credentials_dict = dict(st.secrets["gspread"])  # convert TOML object to dict
+#     scopes = [
+#         "https://www.googleapis.com/auth/spreadsheets",
+#         "https://www.googleapis.com/auth/drive"
+#     ]
+#     credentials = Credentials.from_service_account_info(
+#         credentials_dict,
+#         scopes=scopes
+#     )
+#     gc = gspread.authorize(credentials)
+#     return gc.open_by_key(credentials_dict["gsheet_key"])
 
 @st.cache_resource
 def get_db():
     return psycopg2.connect(os.environ["DATABASE_URL"], sslmode="require")
 
-# --- CREATE TABLES (run once) ---
-try:
+@st.cache_resource
+def ensure_tables():
     conn = get_db()
     with conn.cursor() as cur:
-
-        # Participants table
+        # participants
         cur.execute("""
         CREATE TABLE IF NOT EXISTS participants (
             participant_id TEXT PRIMARY KEY,
@@ -55,140 +54,224 @@ try:
             responses_json TEXT
         );
         """)
+        cur.execute("ALTER TABLE participants ADD COLUMN IF NOT EXISTS demographics_json TEXT;")
+        cur.execute("ALTER TABLE participants ADD COLUMN IF NOT EXISTS notes TEXT;")
+        cur.execute("ALTER TABLE participants ADD COLUMN IF NOT EXISTS current_page TEXT;")
 
-        # Responses table (optional, für später)
+        # responses (BASE TABLE: lowercase column names)
         cur.execute("""
         CREATE TABLE IF NOT EXISTS responses (
-            participant_id TEXT,
-            choice_set_in_block INTEGER,
+            participant_id TEXT NOT NULL,
+            choice_set_in_block INTEGER NOT NULL,
             choice TEXT,
             updated_at TEXT,
             PRIMARY KEY (participant_id, choice_set_in_block)
         );
         """)
 
-        conn.commit()
+        # Add all "Google-Sheet-like" fields (lowercase in table)
+        cur.execute("ALTER TABLE responses ADD COLUMN IF NOT EXISTS cs INTEGER;")
 
+        # context
+        cur.execute("ALTER TABLE responses ADD COLUMN IF NOT EXISTS ticket_price DOUBLE PRECISION;")
+        cur.execute("ALTER TABLE responses ADD COLUMN IF NOT EXISTS trip_duration INTEGER;")
+        cur.execute("ALTER TABLE responses ADD COLUMN IF NOT EXISTS previous_transfers TEXT;")
+        cur.execute("ALTER TABLE responses ADD COLUMN IF NOT EXISTS time_recent INTEGER;")
+        cur.execute("ALTER TABLE responses ADD COLUMN IF NOT EXISTS travel_mode TEXT;")
+
+        # alt1
+        cur.execute("ALTER TABLE responses ADD COLUMN IF NOT EXISTS alt1_d2e INTEGER;")
+        cur.execute("ALTER TABLE responses ADD COLUMN IF NOT EXISTS alt1_d2d INTEGER;")
+        cur.execute("ALTER TABLE responses ADD COLUMN IF NOT EXISTS alt1_cp INTEGER;")
+        cur.execute("ALTER TABLE responses ADD COLUMN IF NOT EXISTS alt1_cd INTEGER;")
+        cur.execute("ALTER TABLE responses ADD COLUMN IF NOT EXISTS alt1_crowdingred INTEGER;")
+        cur.execute("ALTER TABLE responses ADD COLUMN IF NOT EXISTS alt1_crowdinggreen INTEGER;")
+        cur.execute("ALTER TABLE responses ADD COLUMN IF NOT EXISTS alt1_cil INTEGER;")
+        cur.execute("ALTER TABLE responses ADD COLUMN IF NOT EXISTS alt1_cid INTEGER;")
+        cur.execute("ALTER TABLE responses ADD COLUMN IF NOT EXISTS alt1_d DOUBLE PRECISION;")
+
+        # alt2
+        cur.execute("ALTER TABLE responses ADD COLUMN IF NOT EXISTS alt2_d2e INTEGER;")
+        cur.execute("ALTER TABLE responses ADD COLUMN IF NOT EXISTS alt2_d2d INTEGER;")
+        cur.execute("ALTER TABLE responses ADD COLUMN IF NOT EXISTS alt2_cp INTEGER;")
+        cur.execute("ALTER TABLE responses ADD COLUMN IF NOT EXISTS alt2_cd INTEGER;")
+        cur.execute("ALTER TABLE responses ADD COLUMN IF NOT EXISTS alt2_crowdingred INTEGER;")
+        cur.execute("ALTER TABLE responses ADD COLUMN IF NOT EXISTS alt2_crowdinggreen INTEGER;")
+        cur.execute("ALTER TABLE responses ADD COLUMN IF NOT EXISTS alt2_cil INTEGER;")
+        cur.execute("ALTER TABLE responses ADD COLUMN IF NOT EXISTS alt2_cid INTEGER;")
+        cur.execute("ALTER TABLE responses ADD COLUMN IF NOT EXISTS alt2_d DOUBLE PRECISION;")
+
+        # alt3
+        cur.execute("ALTER TABLE responses ADD COLUMN IF NOT EXISTS alt3_time INTEGER;")
+        cur.execute("ALTER TABLE responses ADD COLUMN IF NOT EXISTS alt3_d DOUBLE PRECISION;")
+
+        # VIEW: exakt wie Google Sheets "Responses" Header (inkl. Groß-/Kleinschreibung)
+        cur.execute("""
+        CREATE OR REPLACE VIEW responses_gsheet AS
+        SELECT
+            participant_id                                  AS "participant_id",
+            cs                                              AS "CS",
+            choice_set_in_block                              AS "choice_set_in_block",
+            choice                                          AS "choice",
+            updated_at                                      AS "updated_at",
+
+            ticket_price                                    AS "ticket_price",
+            trip_duration                                   AS "trip_duration",
+            previous_transfers                              AS "previous_transfers",
+            time_recent                                     AS "time_recent",
+            travel_mode                                     AS "travel_mode",
+
+            alt1_d2e                                        AS "alt1_D2E",
+            alt1_d2d                                        AS "alt1_D2D",
+            alt1_cp                                         AS "alt1_CP",
+            alt1_cd                                         AS "alt1_CD",
+            alt1_crowdingred                                AS "alt1_CrowdingRed",
+            alt1_crowdinggreen                              AS "alt1_CrowdingGreen",
+            alt1_cil                                        AS "alt1_CIL",
+            alt1_cid                                        AS "alt1_CID",
+            alt1_d                                          AS "alt1_D",
+
+            alt2_d2e                                        AS "alt2_D2E",
+            alt2_d2d                                        AS "alt2_D2D",
+            alt2_cp                                         AS "alt2_CP",
+            alt2_cd                                         AS "alt2_CD",
+            alt2_crowdingred                                AS "alt2_CrowdingRed",
+            alt2_crowdinggreen                              AS "alt2_CrowdingGreen",
+            alt2_cil                                        AS "alt2_CIL",
+            alt2_cid                                        AS "alt2_CID",
+            alt2_d                                          AS "alt2_D",
+
+            alt3_time                                       AS "alt3_time",
+            alt3_d                                          AS "alt3_D"
+        FROM responses;
+        """)
+
+    conn.commit()
+    return True
+
+# call once per process
+try:
+    ensure_tables()
 except Exception as e:
     st.error(f"DB table creation failed: {e}")
 
 
 
-def find_row_by_keys(ws, header, key_cols, key_vals):
-    # Build column indices
-    col_idx = {name: i + 1 for i, name in enumerate(header)}
-    key_col_indices = [col_idx[c] for c in key_cols]
+# def find_row_by_keys(ws, header, key_cols, key_vals):
+#     # Build column indices
+#     col_idx = {name: i + 1 for i, name in enumerate(header)}
+#     key_col_indices = [col_idx[c] for c in key_cols]
 
-    # Read only key columns (excluding header)
-    # Note: get_all_values can be heavy; for moderate sheet sizes it's ok.
-    data = ws.get_all_values()
-    if not data:
-        return None
-    rows = data[1:]  # skip header
-    for i, r in enumerate(rows, start=2):  # actual sheet row number
-        ok = True
-        for kc_i, kv in zip(key_col_indices, key_vals):
-            cell = r[kc_i - 1] if kc_i - 1 < len(r) else ""
-            if str(cell) != str(kv):
-                ok = False
-                break
-        if ok:
-            return i
-    return None
+#     # Read only key columns (excluding header)
+#     # Note: get_all_values can be heavy; for moderate sheet sizes it's ok.
+#     data = ws.get_all_values()
+#     if not data:
+#         return None
+#     rows = data[1:]  # skip header
+#     for i, r in enumerate(rows, start=2):  # actual sheet row number
+#         ok = True
+#         for kc_i, kv in zip(key_col_indices, key_vals):
+#             cell = r[kc_i - 1] if kc_i - 1 < len(r) else ""
+#             if str(cell) != str(kv):
+#                 ok = False
+#                 break
+#         if ok:
+#             return i
+#     return None
 
 
-def upsert_row(ws, key_cols, key_vals, row_dict):
+# def upsert_row(ws, key_cols, key_vals, row_dict):
 
-    data = ws.get_all_values()
-    if not data:
-        raise ValueError(f"Worksheet {ws.title} has no header row.")
-    header = data[0]
+#     data = ws.get_all_values()
+#     if not data:
+#         raise ValueError(f"Worksheet {ws.title} has no header row.")
+#     header = data[0]
 
-    # Ensure all columns exist
-    missing = [c for c in row_dict.keys() if c not in header]
-    if missing:
-        raise ValueError(f"Missing columns in {ws.title}: {missing}")
+#     # Ensure all columns exist
+#     missing = [c for c in row_dict.keys() if c not in header]
+#     if missing:
+#         raise ValueError(f"Missing columns in {ws.title}: {missing}")
 
-    # Prepare full row in header order
-    full_row = [row_dict.get(col, "") for col in header]
+#     # Prepare full row in header order
+#     full_row = [row_dict.get(col, "") for col in header]
 
-    row_idx = find_row_by_keys(ws, header, key_cols, key_vals)
-    if row_idx is None:
-        ws.append_row(full_row, value_input_option="USER_ENTERED")
-    else:
-        # Update the entire row range (A..lastcol)
-        start = rowcol_to_a1(row_idx, 1)
-        end = rowcol_to_a1(row_idx, len(header))
-        ws.update(f"{start}:{end}", [full_row])
+#     row_idx = find_row_by_keys(ws, header, key_cols, key_vals)
+#     if row_idx is None:
+#         ws.append_row(full_row, value_input_option="USER_ENTERED")
+#     else:
+#         # Update the entire row range (A..lastcol)
+#         start = rowcol_to_a1(row_idx, 1)
+#         end = rowcol_to_a1(row_idx, len(header))
+#         ws.update(f"{start}:{end}", [full_row])
 
 def now_utc_iso():
     return datetime.now(timezone.utc).isoformat()
 
-def flush_all_responses_to_gsheet():
-    if st.session_state.get("responses_flushed", False):
-        return
-    pid = st.session_state.participant_id
+# def flush_all_responses_to_gsheet():
+#     if st.session_state.get("responses_flushed", False):
+#         return
+#     pid = st.session_state.participant_id
 
-    questions = st.session_state.questions_df
-    total_questions = len(questions)
+#     questions = st.session_state.questions_df
+#     total_questions = len(questions)
 
-    # Sicherheitscheck: sind wirklich alle beantwortet?
-    missing = [i for i in range(total_questions) if st.session_state.responses.get(i, None) is None]
-    if missing:
-        raise ValueError(f"Not all questions answered. Missing indices: {missing}")
+#     # Sicherheitscheck: sind wirklich alle beantwortet?
+#     missing = [i for i in range(total_questions) if st.session_state.responses.get(i, None) is None]
+#     if missing:
+#         raise ValueError(f"Not all questions answered. Missing indices: {missing}")
 
-    sheet = get_gsheet()
-    ws_resp = sheet.worksheet("Responses")
+#     sheet = get_gsheet()
+#     ws_resp = sheet.worksheet("Responses")
 
-    header = ws_resp.row_values(1)
+#     header = ws_resp.row_values(1)
 
-    rows = []
-    ts = now_utc_iso()
+#     rows = []
+#     ts = now_utc_iso()
 
-    for i, q in questions.iterrows():
-        row_dict = {
-            "participant_id": pid,
-            "CS": int(q["CS"]),
-            "choice_set_in_block": int(i + 1),
-            "choice": st.session_state.responses[i],
-            "updated_at": ts,
+#     for i, q in questions.iterrows():
+#         row_dict = {
+#             "participant_id": pid,
+#             "CS": int(q["CS"]),
+#             "choice_set_in_block": int(i + 1),
+#             "choice": st.session_state.responses[i],
+#             "updated_at": ts,
 
-            # Kontext
-            "ticket_price": st.session_state.ticket_price,
-            "trip_duration": st.session_state.trip_duration,
-            "previous_transfers": st.session_state.previous_transfers,
-            "time_recent": st.session_state.time_recent,
-            "travel_mode": st.session_state.travel_mode,
+#             # Kontext
+#             "ticket_price": st.session_state.ticket_price,
+#             "trip_duration": st.session_state.trip_duration,
+#             "previous_transfers": st.session_state.previous_transfers,
+#             "time_recent": st.session_state.time_recent,
+#             "travel_mode": st.session_state.travel_mode,
 
-            # Attribute
-            "alt1_D2E": int(q["alt1_D2E"]),
-            "alt1_D2D": int(q["alt1_D2D"]),
-            "alt1_CP": int(q["alt1_CP"]),
-            "alt1_CD": int(q["alt1_CD"]),
-            "alt1_CrowdingRed": int(q["alt1_CrowdingRed"]),
-            "alt1_CrowdingGreen": int(q["alt1_CrowdingGreen"]),
-            "alt1_CIL": int(q["alt1_CIL"]),
-            "alt1_CID": int(q["alt1_CID"]),
-            "alt1_D": float(q["alt1_D"]),
+#             # Attribute
+#             "alt1_D2E": int(q["alt1_D2E"]),
+#             "alt1_D2D": int(q["alt1_D2D"]),
+#             "alt1_CP": int(q["alt1_CP"]),
+#             "alt1_CD": int(q["alt1_CD"]),
+#             "alt1_CrowdingRed": int(q["alt1_CrowdingRed"]),
+#             "alt1_CrowdingGreen": int(q["alt1_CrowdingGreen"]),
+#             "alt1_CIL": int(q["alt1_CIL"]),
+#             "alt1_CID": int(q["alt1_CID"]),
+#             "alt1_D": float(q["alt1_D"]),
 
-            "alt2_D2E": int(q["alt2_D2E"]),
-            "alt2_D2D": int(q["alt2_D2D"]),
-            "alt2_CP": int(q["alt2_CP"]),
-            "alt2_CD": int(q["alt2_CD"]),
-            "alt2_CrowdingRed": int(q["alt2_CrowdingRed"]),
-            "alt2_CrowdingGreen": int(q["alt2_CrowdingGreen"]),
-            "alt2_CIL": int(q["alt2_CIL"]),
-            "alt2_CID": int(q["alt2_CID"]),
-            "alt2_D": float(q["alt2_D"]),
+#             "alt2_D2E": int(q["alt2_D2E"]),
+#             "alt2_D2D": int(q["alt2_D2D"]),
+#             "alt2_CP": int(q["alt2_CP"]),
+#             "alt2_CD": int(q["alt2_CD"]),
+#             "alt2_CrowdingRed": int(q["alt2_CrowdingRed"]),
+#             "alt2_CrowdingGreen": int(q["alt2_CrowdingGreen"]),
+#             "alt2_CIL": int(q["alt2_CIL"]),
+#             "alt2_CID": int(q["alt2_CID"]),
+#             "alt2_D": float(q["alt2_D"]),
 
-            "alt3_time": int(q["alt3_time"]),
-            "alt3_D": float(q["alt3_D"]),
-        }
+#             "alt3_time": int(q["alt3_time"]),
+#             "alt3_D": float(q["alt3_D"]),
+#         }
 
-        rows.append([row_dict.get(col, "") for col in header])
+#         rows.append([row_dict.get(col, "") for col in header])
 
-    ws_resp.append_rows(rows, value_input_option="USER_ENTERED")
-    st.session_state.responses_flushed = True
+#     ws_resp.append_rows(rows, value_input_option="USER_ENTERED")
+#     st.session_state.responses_flushed = True
 
 
 
@@ -244,7 +327,132 @@ def load_design():
 
 design = load_design()
 
+def save_progress_db(current_idx_to_store: int, page_to_store: str):
+    conn = get_db()
+    pid = st.session_state.participant_id
+    ts = now_utc_iso()
 
+    if st.session_state.started_at is None:
+        st.session_state.started_at = ts
+
+    with conn.cursor() as cur:
+        cur.execute("""
+        INSERT INTO participants
+            (participant_id, started_at, finished_at, status, cs_group, scenario_id, current_idx, responses_json, current_page)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ON CONFLICT (participant_id)
+        DO UPDATE SET
+            status = EXCLUDED.status,
+            current_idx = EXCLUDED.current_idx,
+            responses_json = EXCLUDED.responses_json,
+            current_page = EXCLUDED.current_page;
+        """, (
+            pid,
+            st.session_state.started_at,
+            None,
+            "in_progress",
+            st.session_state.cs_group,
+            int(st.session_state.scenario_id),
+            int(current_idx_to_store),
+            json.dumps(st.session_state.responses),
+            page_to_store,
+        ))
+    conn.commit()
+
+
+def upsert_response_db(idx: int, question_row, stored_choice: str):
+    conn = get_db()
+    pid = st.session_state.participant_id
+    ts = now_utc_iso()
+
+    choice_set_in_block = int(idx + 1)  # 1-basiert
+
+    with conn.cursor() as cur:
+        cur.execute("""
+            INSERT INTO responses (
+                participant_id, choice_set_in_block, choice, updated_at,
+                cs,
+                ticket_price, trip_duration, previous_transfers, time_recent, travel_mode,
+                alt1_d2e, alt1_d2d, alt1_cp, alt1_cd, alt1_crowdingred, alt1_crowdinggreen, alt1_cil, alt1_cid, alt1_d,
+                alt2_d2e, alt2_d2d, alt2_cp, alt2_cd, alt2_crowdingred, alt2_crowdinggreen, alt2_cil, alt2_cid, alt2_d,
+                alt3_time, alt3_d
+            )
+            VALUES (
+                %s, %s, %s, %s,
+                %s,
+                %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                %s, %s
+            )
+            ON CONFLICT (participant_id, choice_set_in_block)
+            DO UPDATE SET
+                choice=EXCLUDED.choice,
+                updated_at=EXCLUDED.updated_at,
+
+                cs=EXCLUDED.cs,
+                ticket_price=EXCLUDED.ticket_price,
+                trip_duration=EXCLUDED.trip_duration,
+                previous_transfers=EXCLUDED.previous_transfers,
+                time_recent=EXCLUDED.time_recent,
+                travel_mode=EXCLUDED.travel_mode,
+
+                alt1_d2e=EXCLUDED.alt1_d2e,
+                alt1_d2d=EXCLUDED.alt1_d2d,
+                alt1_cp=EXCLUDED.alt1_cp,
+                alt1_cd=EXCLUDED.alt1_cd,
+                alt1_crowdingred=EXCLUDED.alt1_crowdingred,
+                alt1_crowdinggreen=EXCLUDED.alt1_crowdinggreen,
+                alt1_cil=EXCLUDED.alt1_cil,
+                alt1_cid=EXCLUDED.alt1_cid,
+                alt1_d=EXCLUDED.alt1_d,
+
+                alt2_d2e=EXCLUDED.alt2_d2e,
+                alt2_d2d=EXCLUDED.alt2_d2d,
+                alt2_cp=EXCLUDED.alt2_cp,
+                alt2_cd=EXCLUDED.alt2_cd,
+                alt2_crowdingred=EXCLUDED.alt2_crowdingred,
+                alt2_crowdinggreen=EXCLUDED.alt2_crowdinggreen,
+                alt2_cil=EXCLUDED.alt2_cil,
+                alt2_cid=EXCLUDED.alt2_cid,
+                alt2_d=EXCLUDED.alt2_d,
+
+                alt3_time=EXCLUDED.alt3_time,
+                alt3_d=EXCLUDED.alt3_d;
+        """, (
+            pid, choice_set_in_block, str(stored_choice), ts,
+            int(question_row["CS"]),
+
+            float(st.session_state.ticket_price),
+            int(st.session_state.trip_duration),
+            str(st.session_state.previous_transfers),
+            int(st.session_state.time_recent),
+            str(st.session_state.travel_mode),
+
+            int(question_row["alt1_D2E"]),
+            int(question_row["alt1_D2D"]),
+            int(question_row["alt1_CP"]),
+            int(question_row["alt1_CD"]),
+            int(question_row["alt1_CrowdingRed"]),
+            int(question_row["alt1_CrowdingGreen"]),
+            int(question_row["alt1_CIL"]),
+            int(question_row["alt1_CID"]),
+            float(question_row["alt1_D"]),
+
+            int(question_row["alt2_D2E"]),
+            int(question_row["alt2_D2D"]),
+            int(question_row["alt2_CP"]),
+            int(question_row["alt2_CD"]),
+            int(question_row["alt2_CrowdingRed"]),
+            int(question_row["alt2_CrowdingGreen"]),
+            int(question_row["alt2_CIL"]),
+            int(question_row["alt2_CID"]),
+            float(question_row["alt2_D"]),
+
+            int(question_row["alt3_time"]),
+            float(question_row["alt3_D"]),
+        ))
+    conn.commit()
 # Get participant counter from Google Sheet
 # if 'counter' not in st.session_state:
 #     sheet_meta = get_gsheet().worksheet("Meta")
@@ -277,48 +485,99 @@ else:
 if "questions_df" not in st.session_state:
     st.session_state.questions_df = design.reset_index(drop=True).copy()
 
-# Restore progress once per session (from Participants sheet)
+# # Restore progress once per session (from Participants sheet)
+# if "progress_loaded" not in st.session_state:
+#     try:
+#         ws_part = get_gsheet().worksheet("Participants")
+#         data = ws_part.get_all_values()
+#         if data and len(data) > 1:
+#             header = data[0]
+#             col = {name: i for i, name in enumerate(header)}
+#             pid = st.session_state.participant_id
+
+#             row = None
+#             for r in data[1:]:
+#                 if len(r) > col.get("participant_id", 10**9) and r[col["participant_id"]] == pid:
+#                     row = r
+#                     break
+#             if row and "started_at" in col and len(row) > col["started_at"] and row[col["started_at"]].strip():
+#                 st.session_state.started_at = row[col["started_at"]].strip()
+
+#             if row and "responses_json" in col and len(row) > col["responses_json"]:
+#                 raw = row[col["responses_json"]].strip()
+#                 if raw:
+#                     loaded = json.loads(raw)
+#                     st.session_state.responses = {int(k): v for k, v in loaded.items()}
+
+#             # Prefer first unanswered index
+#             total = len(st.session_state.questions_df)
+#             first_missing = None
+#             for i in range(total):
+#                 if st.session_state.responses.get(i, None) is None:
+#                     first_missing = i
+#                     break
+#             if first_missing is not None:
+#                 st.session_state.current_idx = first_missing
+#             # AUTO resume into survey if progress exists
+#             if st.session_state.responses:
+#                 st.session_state.page = "survey"
+#     except Exception:
+#         pass  # keep it minimal: if load fails, just start normally
+
+#     st.session_state.progress_loaded = True
+
+# Restore progress once per session (from PostgreSQL)
+# Restore progress once per session (from PostgreSQL)
+# Restore progress once per session (from PostgreSQL)
+# Restore progress once per session (from PostgreSQL)
 if "progress_loaded" not in st.session_state:
     try:
-        ws_part = get_gsheet().worksheet("Participants")
-        data = ws_part.get_all_values()
-        if data and len(data) > 1:
-            header = data[0]
-            col = {name: i for i, name in enumerate(header)}
-            pid = st.session_state.participant_id
+        conn = get_db()
+        pid = st.session_state.participant_id
 
-            row = None
-            for r in data[1:]:
-                if len(r) > col.get("participant_id", 10**9) and r[col["participant_id"]] == pid:
-                    row = r
-                    break
-            if row and "started_at" in col and len(row) > col["started_at"] and row[col["started_at"]].strip():
-                st.session_state.started_at = row[col["started_at"]].strip()
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT started_at, status, current_idx, current_page, responses_json "
+                "FROM participants WHERE participant_id=%s",
+                (pid,)
+            )
+            row = cur.fetchone()
 
-            if row and "responses_json" in col and len(row) > col["responses_json"]:
-                raw = row[col["responses_json"]].strip()
-                if raw:
-                    loaded = json.loads(raw)
-                    st.session_state.responses = {int(k): v for k, v in loaded.items()}
+        if row:
+            started_at, status, current_idx, current_page, responses_json = row
 
-            # Prefer first unanswered index
-            total = len(st.session_state.questions_df)
-            first_missing = None
-            for i in range(total):
-                if st.session_state.responses.get(i, None) is None:
-                    first_missing = i
-                    break
-            if first_missing is not None:
-                st.session_state.current_idx = first_missing
-            # AUTO resume into survey if progress exists
-            if st.session_state.responses:
-                st.session_state.page = "survey"
-    except Exception:
-        pass  # keep it minimal: if load fails, just start normally
+            if started_at:
+                st.session_state.started_at = started_at
+
+            if responses_json:
+                loaded = json.loads(responses_json)
+                st.session_state.responses = {int(k): v for k, v in loaded.items()}
+
+            # Index wiederherstellen (DB ist Quelle der Wahrheit)
+            if current_idx is not None:
+                st.session_state.current_idx = int(current_idx)
+            else:
+                # fallback: first unanswered
+                total = len(st.session_state.questions_df)
+                for i in range(total):
+                    if st.session_state.responses.get(i, None) is None:
+                        st.session_state.current_idx = i
+                        break
+
+            # Seite wiederherstellen
+            if current_page:
+                st.session_state.page = current_page
+            else:
+                st.session_state.page = "survey" if (status in ("started", "in_progress") or st.session_state.responses) else "start"
+
+            # completed -> end
+            if status == "completed":
+                st.session_state.page = "end"
+
+    except Exception as e:
+        st.warning(f"DB restore failed (starting fresh): {e}")
 
     st.session_state.progress_loaded = True
-
-
 
 # Assign trip attributes based on participant counter
 @st.cache_data
@@ -575,26 +834,15 @@ By continuing, you confirm that you are 18+ years old, have read and understood 
         if st.session_state.started_at is None:
             st.session_state.started_at = now_utc_iso()
 
-        sheet = get_gsheet()
-        ws_part = sheet.worksheet("Participants")
+        # Also mark started in PostgreSQL
+        try:
+            # start markieren + page speichern
+            st.session_state.page = "survey"
+            st.session_state.current_idx = 0
+            save_progress_db(0, "survey")
+        except Exception as e:
+            st.warning(f"Could not mark start in DB: {e}")
 
-        upsert_row(
-            ws_part,
-            key_cols=["participant_id"],
-            key_vals=[pid],
-            row_dict={
-                "participant_id": pid,
-                "started_at": st.session_state.started_at,
-                "finished_at": "",
-                "status": "started",
-                "cs_group": st.session_state.cs_group,
-                "scenario_id": st.session_state.scenario_id,
-                "updated_at": now_utc_iso(),
-            }
-        )
-
-        st.session_state.page = 'survey'
-        st.session_state.current_idx = 0
         st.rerun()
 
 
@@ -733,6 +981,37 @@ elif st.session_state.page == 'survey':
             next_clicked = st.form_submit_button("Next" if idx < total_questions - 1 else "Continue")
     
         if back_clicked and idx > 0:
+            selected = st.session_state[f"temp_choice_{idx}"]
+            if selected is None:
+                # wenn nichts gewählt wurde: einfach nur zurück
+                save_progress_db(idx - 1, "survey")
+                st.session_state.current_idx -= 1
+                st.rerun()
+
+            # stored_choice bestimmen (wie bei Next)
+            if selected == "Door L":
+                stored_choice = f"alt{left_alt}"
+            elif selected == "Door R":
+                stored_choice = f"alt{right_alt}"
+            else:
+                stored_choice = selected
+
+            st.session_state.responses[idx] = stored_choice
+
+            # Antwort + Attribute speichern
+            try:
+                upsert_response_db(idx, question, stored_choice)
+            except Exception as e:
+                st.error(f"Could not save response + attributes to DB. Error: {e}")
+                st.stop()
+
+            # aktuellen Stand speichern (aktuelle Frage = idx)
+            try:
+                save_progress_db(idx - 1, "survey")
+            except Exception as e:
+                st.error(f"Could not save progress. Error: {e}")
+                st.stop()
+
             st.session_state.current_idx -= 1
             st.rerun()
     
@@ -752,45 +1031,55 @@ elif st.session_state.page == 'survey':
 
             st.session_state.responses[idx] = stored_choice
 
+            # Long-format persistieren (idx ist 0-basiert -> DB will 1-basiert)
+            # Antwort + Attribute in responses upserten
+            try:
+                upsert_response_db(idx, question, stored_choice)
+            except Exception as e:
+                st.error(f"Could not save response + attributes to DB. Error: {e}")
+                st.stop()
+
             # Autosave progress to Participants every N questions (fast)
-            N = 1  # z.B. 3; nimm 1 wenn es dich nicht stört
-            if (idx + 1) % N == 0:
-                try:
-                    ws_part = get_gsheet().worksheet("Participants")
-                    upsert_row(
-                        ws_part,
-                        key_cols=["participant_id"],
-                        key_vals=[st.session_state.participant_id],
-                        row_dict={
-                            "participant_id": st.session_state.participant_id,
-                            "started_at": st.session_state.started_at,
-                            "finished_at": "",
-                            "status": "in_progress",
-                            "cs_group": st.session_state.cs_group,
-                            "scenario_id": st.session_state.scenario_id,
-                            "current_idx": int(idx + 1),
-                            "responses_json": json.dumps(st.session_state.responses),
-                            "updated_at": now_utc_iso(),
-                        }
-                    )
-                except Exception:
-                    pass
+            # N = 1  # z.B. 3; nimm 1 wenn es dich nicht stört
+            # if (idx + 1) % N == 0:
+            #     try:
+            #         ws_part = get_gsheet().worksheet("Participants")
+            #         upsert_row(
+            #             ws_part,
+            #             key_cols=["participant_id"],
+            #             key_vals=[st.session_state.participant_id],
+            #             row_dict={
+            #                 "participant_id": st.session_state.participant_id,
+            #                 "started_at": st.session_state.started_at,
+            #                 "finished_at": "",
+            #                 "status": "in_progress",
+            #                 "cs_group": st.session_state.cs_group,
+            #                 "scenario_id": st.session_state.scenario_id,
+            #                 "current_idx": int(idx + 1),
+            #                 "responses_json": json.dumps(st.session_state.responses),
+            #                 "updated_at": now_utc_iso(),
+            #             }
+            #         )
+            #     except Exception:
+            #         pass
             
-            
+            # Save progress to PostgreSQL (fast upsert)
+            try:
+                save_progress_db(idx + 1, "survey")
+            except Exception as e:
+                st.error(f"Could not save progress. Please try again. Error: {e}")
+                st.stop()
+
+            # Weiter zur nächsten Frage / oder weiter zu demographics am Ende
             if idx < total_questions - 1:
                 st.session_state.current_idx += 1
                 st.rerun()
             else:
-                # Write everything once at the end of the survey (fast)
-                try:
-                    flush_all_responses_to_gsheet()
-                except Exception as e:
-                    st.error(f"Could not save responses. Please try again. Error: {e}")
-                    st.stop()
-
-                st.session_state.page = 'demographics'
+                # am Ende: optional noch alles final wegschreiben
+                # (solange du noch Google Sheets nutzt)
+                save_progress_db(idx + 1, "demographics")
+                st.session_state.page = "demographics"
                 st.rerun()
-
 
 
 
@@ -843,6 +1132,7 @@ elif st.session_state.page == 'demographics':
             submitted = st.form_submit_button("Continue")
 
     if back_clicked:
+        save_progress_db(st.session_state.current_idx, "survey")
         st.session_state.page = 'survey'
         st.rerun()
         # Make sure this is at the same level as the other inputs
@@ -850,23 +1140,24 @@ elif st.session_state.page == 'demographics':
 
     if submitted:
         pid = st.session_state.participant_id
-        sheet = get_gsheet()
-        ws_demo = sheet.worksheet("Demographics")
+        demo = {
+            "age": st.session_state.get("demo_age", "Prefer not to say"),
+            "gender": st.session_state.get("demo_gender", "Prefer not to say"),
+            "travel_frequency": st.session_state.get("demo_trainfq", "Prefer not to say"),
+            "ubahn_frequency": st.session_state.get("demo_subwayfq", "Prefer not to say"),
+            "mobility": st.session_state.get("demo_mobility", "Prefer not to say"),
+        }
 
-        upsert_row(
-            ws_demo,
-            key_cols=["participant_id"],
-            key_vals=[pid],
-            row_dict={
-                "participant_id": pid,
-                "age": st.session_state.get("demo_age", "Prefer not to say"),
-                "gender": st.session_state.get("demo_gender", "Prefer not to say"),
-                "travel_frequency": st.session_state.get("demo_trainfq", "Prefer not to say"),
-                "ubahn_frequency": st.session_state.get("demo_subwayfq", "Prefer not to say"),
-                "mobility": st.session_state.get("demo_mobility", "Prefer not to say"),
-                "updated_at": now_utc_iso(),
-            }
-        )
+        conn = get_db()
+        with conn.cursor() as cur:
+            cur.execute("""
+                UPDATE participants
+                SET demographics_json=%s
+                WHERE participant_id=%s
+            """, (json.dumps(demo), pid))
+        conn.commit()
+
+        save_progress_db(st.session_state.current_idx, "notes")
 
         st.session_state.page = 'notes'
         st.rerun()
@@ -885,6 +1176,7 @@ elif st.session_state.page == 'notes':
 
     # ✅ Back button OUTSIDE the form (does NOT submit the form)
     if st.button("Back", key="notes_back"):
+        save_progress_db(st.session_state.current_idx, "demographics")
         st.session_state.page = 'demographics'
         st.rerun()
 
@@ -900,49 +1192,50 @@ elif st.session_state.page == 'notes':
         submitted = st.form_submit_button("Submit")
 
     if submitted:
-        # Prevent double submits on rerun
-        if st.session_state.get("final_submitted", False):
-            st.session_state.page = 'end'
-            st.rerun()
+
 
         st.session_state.notes_text = notes_text
         st.session_state.final_submitted = True
 
         pid = st.session_state.participant_id
-        sheet = get_gsheet()
+        conn = get_db()
+        with conn.cursor() as cur:
+            cur.execute("""
+                UPDATE participants
+                SET notes=%s
+                WHERE participant_id=%s
+            """, (st.session_state.notes_text, pid))
+        conn.commit()
 
-        # Notes UPSERT
-        ws_notes = sheet.worksheet("Notes")
-        upsert_row(
-            ws_notes,
-            key_cols=["participant_id"],
-            key_vals=[pid],
-            row_dict={
-                "participant_id": pid,
-                "notes": st.session_state.notes_text,
-                "updated_at": now_utc_iso(),
-            }
-        )
+        
 
-        # Participants: mark completed (UPSERT) – started_at NICHT verlieren
-        ws_part = sheet.worksheet("Participants")
-        upsert_row(
-            ws_part,
-            key_cols=["participant_id"],
-            key_vals=[pid],
-            row_dict={
-                "participant_id": pid,
-                "started_at": st.session_state.started_at,
-                "finished_at": now_utc_iso(),
-                "status": "completed",
-                "cs_group": st.session_state.cs_group,
-                "scenario_id": st.session_state.scenario_id,
-                "current_idx": int(st.session_state.current_idx),
-                "responses_json": json.dumps(st.session_state.responses),
-                "updated_at": now_utc_iso(),
-            }
-        )
+        # Mark completed in PostgreSQL
+        try:
+            conn = get_db()
+            pid = st.session_state.participant_id
+            ts = now_utc_iso()
+            with conn.cursor() as cur:
+                cur.execute("""
+                UPDATE participants
+                SET finished_at=%s,
+                    status=%s,
+                    current_idx=%s,
+                    responses_json=%s,
+                    current_page=%s
+                WHERE participant_id=%s
+                """, (
+                    ts,
+                    "completed",
+                    int(st.session_state.current_idx),
+                    json.dumps(st.session_state.responses),
+                    "end",
+                    pid
+                ))
+            conn.commit()
+        except Exception as e:
+            st.warning(f"Could not mark completion in DB: {e}")
 
+        save_progress_db(st.session_state.current_idx, "end")
         st.session_state.page = 'end'
         st.rerun()
 
