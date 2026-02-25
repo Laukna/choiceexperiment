@@ -746,14 +746,29 @@ Please review all information shown for each option and select the alternative y
 
 At the end of the survey, you will be asked a few optional demographic questions (e.g., age group, gender, travel frequency). 
 These questions are voluntary and anonymous and are used for research purposes only.
-                
-**Data Protection and Confidentiality:**
+""")
+               
+    with st.expander("Data Protection and Confidentiality", expanded=False):
+        st.markdown("""
+This study is conducted in accordance with the General Data Protection Regulation (GDPR).
 
-- Your participation is entirely voluntary, and you may withdraw at any time without consequences.
-- All data will be collected anonymously and used solely for academic research purposes. No personal identifiers will be recorded.
-- Data storage and processing follow the requirements of the General Data Protection Regulation (GDPR/DSGVO).
+**Data collection and purpose**  
+Only research-relevant data are collected (experimental choices, scenario parameters, optional demographic information, and optional comments). No direct personal identifiers (e.g., name or email) are recorded. Participants are identified only via a pseudonymous participant ID.
 
+**Legal basis**  
+Data processing is based on informed consent (Art. 6(1)(a) GDPR). Participation is voluntary and may be discontinued at any time without consequences.
 
+**Data storage and retention**  
+Data are primarily stored on secure servers within the European Union (Frankfurt region). The application is hosted via Render; processing may involve infrastructure outside the EEA under appropriate safeguards (e.g., Standard Contractual Clauses) ensuring GDPR-compliant protection. Research data are retained for scientific documentation and reproducibility for up to 10 years and then deleted or anonymized.
+
+**Access and rights**  
+Data access is restricted to authorized researchers. Participants have the right to withdraw consent and to request access, correction, or deletion where applicable under GDPR.
+
+**Contact**  
+RWTH Aachen University – Chair of Data & Business Analytics  
+knappik@analytics.rwth-aachen.de
+""")
+    st.markdown(f"""
 **Contact Information:**
 
 If you have any questions about the study, please contact **Laura Knappik** at **knappik@analytics.rwth-aachen.de**.
