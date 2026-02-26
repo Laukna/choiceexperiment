@@ -961,7 +961,7 @@ elif st.session_state.page == 'survey':
         st.markdown(f"**Crowding level at door**: {aval(left_alt,'CD')} persons")
         st.markdown(f"**In-vehicle crowding**: {crowding_text_for(left_alt)}")
         st.markdown(
-            f"**Offered discount**:  You pay {ticket_price * (1 - aval(left_alt,'D')/100):.2f} € ({aval(left_alt,'D')}% discount)"
+            f"**New ticket price**:  You pay {ticket_price * (1 - aval(left_alt,'D')/100):.2f} € ({aval(left_alt,'D')}% discount)"
         )
     
     with col2:
@@ -972,7 +972,7 @@ elif st.session_state.page == 'survey':
         st.markdown(f"**Crowding level at door**: {aval(right_alt,'CD')} persons")
         st.markdown(f"**In-vehicle crowding**: {crowding_text_for(right_alt)}")
         st.markdown(
-            f"**Offered discount**:  You pay {ticket_price * (1 - aval(right_alt,'D')/100):.2f} € ({aval(right_alt,'D')}% discount)"
+            f"**New ticket price**:  You pay {ticket_price * (1 - aval(right_alt,'D')/100):.2f} € ({aval(right_alt,'D')}% discount)"
         )
 
 
@@ -982,10 +982,10 @@ elif st.session_state.page == 'survey':
     with sp_mid:
         st.subheader("Next train")
         alt3_time = question["alt3_time"]
-        st.markdown(f"**Time until train arrival (Next train)**: {alt3_time} minute")
+        st.markdown(f"**Time until train arrival (Next train)**: {alt3_time} minutes")
         alt3_discount = question["alt3_D"]
         st.markdown(
-            f"**Offered discount**: You pay {ticket_price * (1 - alt3_discount/100):.2f} € ({alt3_discount}% discount)"
+            f"**New ticket price**: You pay {ticket_price * (1 - alt3_discount/100):.2f} € ({alt3_discount}% discount)"
         )
 
 
