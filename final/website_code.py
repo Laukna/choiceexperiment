@@ -954,7 +954,7 @@ elif st.session_state.page == 'survey':
 
     with col1:
         st.subheader("Door L")
-        st.markdown(f"**Walking distance to exit**: {aval(left_alt,'D2E')} m")
+        st.markdown(f"**Walking distance from door to exit**: {aval(left_alt,'D2E')} m")
         st.markdown(f"**Walking distance to door**: {aval(left_alt,'D2D')} m")
         st.markdown(f"**Crowding on platform**: {'Yes' if aval(left_alt,'CP') == 1 else 'No'}")
         st.markdown(f"**Crowding level at door**: {aval(left_alt,'CD')} persons")
@@ -965,7 +965,7 @@ elif st.session_state.page == 'survey':
     
     with col2:
         st.subheader("Door R")
-        st.markdown(f"**Walking distance to exit**: {aval(right_alt,'D2E')} m")
+        st.markdown(f"**Walking distance from door to exit**: {aval(right_alt,'D2E')} m")
         st.markdown(f"**Walking distance to door**: {aval(right_alt,'D2D')} m")
         st.markdown(f"**Crowding on platform**: {'Yes' if aval(right_alt,'CP') == 1 else 'No'}")
         st.markdown(f"**Crowding level at door**: {aval(right_alt,'CD')} persons")
