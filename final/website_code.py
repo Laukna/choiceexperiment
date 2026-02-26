@@ -680,6 +680,7 @@ For all questions, assume the following:
 - Total trip duration: **{trip_duration} minutes**.
 - {pt_text}
 - Your (upcoming) train will depart in **{time_recent} minutes**.
+- You are travelling during daytime.
 
 These conditions remain the same throughout the experiment.
 
@@ -707,7 +708,7 @@ Each alternative is described by several attributes that may vary between option
 - **Crowding on platform** — Whether the platform is crowded or not.
 - **Crowding at door** — Number of people waiting at this door location.
 - **In-vehicle crowding** — Expected crowding levels inside the train near this door (green = low, yellow = medium, red = high, gray = no information). Information may be provided via platform display, LED indicators, or both.
-- **Offered discount** — Percentage reduction of the ticket price when boarding at this door.
+- **New ticket price** — Price after after applying a discount when boarding at this door. 
 
 ---
 **Instructions:** 
@@ -981,7 +982,7 @@ elif st.session_state.page == 'survey':
     with sp_mid:
         st.subheader("Next train")
         alt3_time = question["alt3_time"]
-        st.markdown(f"**Time until train arrival (Next train)**: {alt3_time} minute(s)")
+        st.markdown(f"**Time until train arrival (Next train)**: {alt3_time} minute")
         alt3_discount = question["alt3_D"]
         st.markdown(
             f"**Offered discount**: You pay {ticket_price * (1 - alt3_discount/100):.2f} € ({alt3_discount}% discount)"
