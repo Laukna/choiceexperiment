@@ -976,13 +976,16 @@ elif st.session_state.page == 'survey':
 
 
     #Option 3: Next train
-    st.subheader("Next train")
-    alt3_time = question["alt3_time"]
-    st.markdown(f"**Time until train arrival (Next train)**: {alt3_time} minute(s)")
-    alt3_discount = question["alt3_D"]
-    st.markdown(
-    f"**Offered discount**: You pay {ticket_price * (1 - alt3_discount/100):.2f} € ({alt3_discount}% discount)"
-)
+    sp_left, sp_mid, sp_right = st.columns([1, 2, 1])
+
+    with sp_mid:
+        st.subheader("Next train")
+        alt3_time = question["alt3_time"]
+        st.markdown(f"**Time until train arrival (Next train)**: {alt3_time} minute(s)")
+        alt3_discount = question["alt3_D"]
+        st.markdown(
+            f"**Offered discount**: You pay {ticket_price * (1 - alt3_discount/100):.2f} € ({alt3_discount}% discount)"
+        )
 
 
 
