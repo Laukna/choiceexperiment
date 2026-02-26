@@ -330,7 +330,7 @@ else:
 @st.cache_data
 def load_design():
     csv_path = os.path.join(BASE_DIR, "choice_sets_large.csv")
-    return pd.read_csv(csv_path, sep=",")
+    return pd.read_csv(csv_path, sep=";")
 
 design = load_design()
 
