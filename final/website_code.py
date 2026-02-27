@@ -703,8 +703,8 @@ Selecting “None of these options” indicates that you would not choose any of
 **Information provided:** 
 
 Each alternative is described by several attributes that may vary between options:
-- **Walking distance to exit** — Distance from this door to the nearest exit at the destination station.
 - **Walking distance to door** — Distance you walk on the platform to reach this door.
+- **Walking distance door to exit** — Distance from this door to the nearest exit at the destination station.
 - **Crowding on platform** — Whether the platform is crowded or not.
 - **Crowding at door** — Number of people waiting at this door location.
 - **In-vehicle crowding** — Expected crowding levels inside the train near this door (green = low, yellow = medium, red = high, gray = no information). Information may be provided via platform display, LED indicators, or both.
@@ -955,8 +955,8 @@ elif st.session_state.page == 'survey':
 
     with col1:
         st.subheader("Door L")
-        st.markdown(f"**Walking distance from door to exit**: {aval(left_alt,'D2E')} m")
         st.markdown(f"**Walking distance to door**: {aval(left_alt,'D2D')} m")
+        st.markdown(f"**Walking distance from door to exit**: {aval(left_alt,'D2E')} m")
         st.markdown(f"**Crowding on platform**: {'Yes' if aval(left_alt,'CP') == 1 else 'No'}")
         st.markdown(f"**Crowding level at door**: {aval(left_alt,'CD')} persons")
         st.markdown(f"**In-vehicle crowding**: {crowding_text_for(left_alt)}")
@@ -966,8 +966,8 @@ elif st.session_state.page == 'survey':
     
     with col2:
         st.subheader("Door R")
-        st.markdown(f"**Walking distance from door to exit**: {aval(right_alt,'D2E')} m")
         st.markdown(f"**Walking distance to door**: {aval(right_alt,'D2D')} m")
+        st.markdown(f"**Walking distance from door to exit**: {aval(right_alt,'D2E')} m")
         st.markdown(f"**Crowding on platform**: {'Yes' if aval(right_alt,'CP') == 1 else 'No'}")
         st.markdown(f"**Crowding level at door**: {aval(right_alt,'CD')} persons")
         st.markdown(f"**In-vehicle crowding**: {crowding_text_for(right_alt)}")
